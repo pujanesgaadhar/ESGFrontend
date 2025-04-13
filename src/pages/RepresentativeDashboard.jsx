@@ -81,13 +81,19 @@ const RepresentativeDashboard = () => {
   };
 
   return (
-    <Box sx={{ display: 'flex' }}>
-      <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+    <Box sx={{ display: 'flex', width: '100%' }}>
+      <Container maxWidth="lg" sx={{ mt: 4, mb: 4, width: '100%' }}>
         <Grid container spacing={3}>
           {/* ESG Submission Form */}
           <Grid item xs={12}>
-            <Paper sx={{ p: 2 }}>
-              <Typography component="h2" variant="h6" color="primary" gutterBottom>
+            <Paper sx={{ 
+              p: 3, 
+              borderRadius: 2,
+              backgroundColor: '#FFFFFF',
+              border: '1px solid rgba(46, 125, 50, 0.1)',
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)'
+            }}>
+              <Typography component="h2" variant="h6" gutterBottom sx={{ color: '#2E7D32', fontWeight: 'bold' }}>
                 Submit ESG Data
               </Typography>
               <Box component="form" onSubmit={handleSubmit} sx={{ mt: 2 }}>
@@ -131,11 +137,22 @@ const RepresentativeDashboard = () => {
                   <Grid item xs={12}>
                     <Button
                       type="submit"
+                      fullWidth
                       variant="contained"
-                      color="primary"
-                      sx={{ mt: 2 }}
+                      sx={{ 
+                        mt: 3, 
+                        mb: 2,
+                        background: 'linear-gradient(45deg, #2E7D32, #558B2F)',
+                        color: 'white',
+                        '&:hover': {
+                          background: 'linear-gradient(45deg, #558B2F, #2E7D32)',
+                        },
+                        textTransform: 'none',
+                        fontSize: '1rem',
+                        py: 1.5
+                      }}
                     >
-                      Submit ESG Data
+                      Submit
                     </Button>
                   </Grid>
                 </Grid>

@@ -6,13 +6,19 @@ import {
   IconButton,
   Typography,
   Menu,
+  Container,
+  Avatar,
+  Button,
+  Tooltip,
   MenuItem,
   Drawer,
   List,
+  Divider,
   ListItem,
+  ListItemButton,
   ListItemIcon,
   ListItemText,
-  Divider,
+  Badge,
   SwipeableDrawer,
   Card,
   CardContent,
@@ -163,27 +169,47 @@ const Navigation = () => {
         <Toolbar>
           <IconButton
             color="inherit"
-            aria-label="open drawer"
             edge="start"
             onClick={handleDrawerToggle}
-            sx={{ mr: 2, display: { sm: 'none' } }}
+            sx={{ mr: 2 }}
           >
             <MenuIcon />
           </IconButton>
-          <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-            ESG Framework
+          <Box 
+            component="img"
+            src="/images/esgaadhar-logo.svg"
+            alt="ESGAadhar Logo"
+            sx={{ 
+              height: 40,
+              mr: 1,
+            }}
+          />
+          <Typography variant="h5" component="div" sx={{ flexGrow: 1, fontWeight: 'bold', color: '#FFFFFF' }}>
+            ESGAadhar
           </Typography>
 
-          <IconButton
-            size="large"
-            aria-label="account of current user"
-            aria-controls="menu-appbar"
-            aria-haspopup="true"
-            onClick={handleMenu}
-            color="inherit"
-          >
-            <PersonIcon />
-          </IconButton>
+          <Box sx={{ display: 'flex', alignItems: 'center', ml: 'auto' }}>
+            <IconButton
+              size="large"
+              color="inherit"
+              sx={{ ml: 2 }}
+            >
+              <PersonIcon />
+            </IconButton>
+            <IconButton
+              size="large"
+              aria-label="account of current user"
+              aria-controls="menu-appbar"
+              aria-haspopup="true"
+              onClick={handleMenu}
+              color="inherit"
+              sx={{ ml: 1 }}
+            >
+              <Badge badgeContent={0} color="error">
+                <NotificationsIcon />
+              </Badge>
+            </IconButton>
+          </Box>
           <Menu
             id="menu-appbar"
             anchorEl={anchorEl}

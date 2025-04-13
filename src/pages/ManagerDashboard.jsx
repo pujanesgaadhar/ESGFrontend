@@ -128,24 +128,32 @@ const ManagerDashboard = () => {
   };
 
   return (
-    <Box sx={{ display: 'flex' }}>
-      <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+    <Box sx={{ display: 'flex', width: '100%' }}>
+      <Container maxWidth="lg" sx={{ mt: 4, mb: 4, width: '100%' }}>
         <Grid container spacing={3}>
           {/* Pending Approvals */}
           <Grid item xs={12}>
-            <Paper sx={{ p: 2, display: 'flex', flexDirection: 'column' }}>
-              <Typography component="h2" variant="h6" color="primary" gutterBottom>
+            <Paper sx={{ 
+              p: 3, 
+              display: 'flex', 
+              flexDirection: 'column',
+              borderRadius: 2,
+              backgroundColor: '#FFFFFF',
+              border: '1px solid rgba(46, 125, 50, 0.1)',
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)'
+            }}>
+              <Typography component="h2" variant="h6" gutterBottom sx={{ color: '#2E7D32', fontWeight: 'bold' }}>
                 Pending Approvals
               </Typography>
               <Table size="medium">
                 <TableHead>
                   <TableRow>
-                    <TableCell>Company</TableCell>
-                    <TableCell>Submitted By</TableCell>
-                    <TableCell>Date</TableCell>
-                    <TableCell>Type</TableCell>
-                    <TableCell>Status</TableCell>
-                    <TableCell align="right">Actions</TableCell>
+                    <TableCell sx={{ fontWeight: 'bold', color: '#33691E' }}>Company</TableCell>
+                    <TableCell sx={{ fontWeight: 'bold', color: '#33691E' }}>Submitted By</TableCell>
+                    <TableCell sx={{ fontWeight: 'bold', color: '#33691E' }}>Date</TableCell>
+                    <TableCell sx={{ fontWeight: 'bold', color: '#33691E' }}>Type</TableCell>
+                    <TableCell sx={{ fontWeight: 'bold', color: '#33691E' }}>Status</TableCell>
+                    <TableCell align="right" sx={{ fontWeight: 'bold', color: '#33691E' }}>Actions</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -165,17 +173,31 @@ const ManagerDashboard = () => {
                       <TableCell align="right">
                         <Button
                           variant="contained"
-                          color="success"
                           size="small"
-                          sx={{ mr: 1 }}
+                          sx={{ 
+                            mr: 1,
+                            background: 'linear-gradient(45deg, #2E7D32, #558B2F)',
+                            color: 'white',
+                            '&:hover': {
+                              background: 'linear-gradient(45deg, #558B2F, #2E7D32)',
+                            },
+                            textTransform: 'none',
+                          }}
                           onClick={() => handleApprove(submission.id)}
                         >
                           Approve
                         </Button>
                         <Button
                           variant="contained"
-                          color="error"
                           size="small"
+                          sx={{ 
+                            background: 'linear-gradient(45deg, #795548, #8D6E63)',
+                            color: 'white',
+                            '&:hover': {
+                              background: 'linear-gradient(45deg, #8D6E63, #795548)',
+                            },
+                            textTransform: 'none',
+                          }}
                           onClick={() => handleDeny(submission.id)}
                         >
                           Deny
@@ -190,8 +212,16 @@ const ManagerDashboard = () => {
 
           {/* ESG Performance Chart */}
           <Grid item xs={12}>
-            <Paper sx={{ p: 2, display: 'flex', flexDirection: 'column' }}>
-              <Typography component="h2" variant="h6" color="primary" gutterBottom>
+            <Paper sx={{ 
+              p: 3, 
+              display: 'flex', 
+              flexDirection: 'column',
+              borderRadius: 2,
+              backgroundColor: '#FFFFFF',
+              border: '1px solid rgba(46, 125, 50, 0.1)',
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)'
+            }}>
+              <Typography component="h2" variant="h6" gutterBottom sx={{ color: '#2E7D32', fontWeight: 'bold' }}>
                 ESG Performance Overview
               </Typography>
               <ESGDataChart />

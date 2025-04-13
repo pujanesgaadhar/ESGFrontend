@@ -18,11 +18,16 @@ import {
   Alert,
   Chip,
 } from '@mui/material';
-import { getPendingSubmissions, reviewSubmission } from '../services/api';
+import CloseIcon from '@mui/icons-material/Close';
+import { getPendingSubmissions, reviewSubmission, deleteNotificationBySubmissionId, getSubmissionById } from '../services/api';
 
 const ESGApprovalList = () => {
   const [submissions, setSubmissions] = useState([]);
   const [selectedSubmission, setSelectedSubmission] = useState(null);
+  const [viewSubmission, setViewSubmission] = useState(null);
+  const [submissionDetails, setSubmissionDetails] = useState(null);
+  const [showDetailsDialog, setShowDetailsDialog] = useState(false);
+  const [loadingDetails, setLoadingDetails] = useState(false);
   const [reviewComment, setReviewComment] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -39,13 +44,37 @@ const ESGApprovalList = () => {
       setError('Failed to load submissions');
     }
   };
+  
+  // Load detailed submission data for viewing in the popup
+  const loadSubmissionDetails = async (submissionId) => {
+    try {
+      setLoadingDetails(true);
+      const response = await getSubmissionById(submissionId);
+      setSubmissionDetails(response.data);
+      setShowDetailsDialog(true);
+    } catch (err) {
+      setError('Failed to load submission details');
+    } finally {
+      setLoadingDetails(false);
+    }
+  };
 
   const handleReview = async (status) => {
     try {
+      // Update submission status
       await reviewSubmission(selectedSubmission.id, {
         status,
         comment: reviewComment
       });
+      
+      // Delete related notification automatically
+      try {
+        await deleteNotificationBySubmissionId(selectedSubmission.id);
+        // No need to handle success explicitly as this is automatic cleanup
+      } catch (notifErr) {
+        console.warn('Could not delete notification, but submission was approved:', notifErr);
+      }
+      
       setSuccess(`Submission ${status} successfully`);
       setSelectedSubmission(null);
       setReviewComment('');
@@ -90,61 +119,278 @@ const ESGApprovalList = () => {
 
   return (
     <Box>
-      <Paper sx={{ p: 3, mb: 3 }}>
-        <Typography variant="h5" gutterBottom>
-          Pending ESG Submissions
-        </Typography>
-
-        {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
-        {success && <Alert severity="success" sx={{ mb: 2 }}>{success}</Alert>}
-
+      {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+      {success && <Alert severity="success" sx={{ mb: 2 }}>{success}</Alert>}
+      <Paper sx={{ p: 2, mb: 3 }}>
+        <Typography variant="h5" gutterBottom>ESG Submissions Pending Review</Typography>
         <TableContainer>
           <Table>
             <TableHead>
               <TableRow>
-                <TableCell>Company</TableCell>
                 <TableCell>Submitted By</TableCell>
-                <TableCell>Reporting Period</TableCell>
-                <TableCell>Status</TableCell>
-                <TableCell align="right">Actions</TableCell>
+                <TableCell>Company</TableCell>
+                <TableCell>Date</TableCell>
+                <TableCell>View Data</TableCell>
+                <TableCell>Actions</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
-              {submissions.map((submission) => (
-                <TableRow key={submission.id}>
-                  <TableCell>{submission.company_name}</TableCell>
-                  <TableCell>{submission.submitted_by_name}</TableCell>
-                  <TableCell>
-                    {new Date(submission.reporting_period).toLocaleDateString()}
-                  </TableCell>
-                  <TableCell>
-                    <Chip
-                      label={submission.status}
-                      color={
-                        submission.status === 'pending'
-                          ? 'warning'
-                          : submission.status === 'approved'
-                          ? 'success'
-                          : 'error'
-                      }
-                      size="small"
-                    />
-                  </TableCell>
-                  <TableCell align="right">
-                    <Button
-                      variant="outlined"
-                      size="small"
-                      onClick={() => setSelectedSubmission(submission)}
-                    >
-                      Review
-                    </Button>
-                  </TableCell>
+              {submissions.length > 0 ? (
+                submissions.map(submission => (
+                  <TableRow key={submission.id}>
+                    <TableCell>{submission.submittedBy?.name || 'Unknown'}</TableCell>
+                    <TableCell>{submission.company?.name || 'Unknown'}</TableCell>
+                    <TableCell>{new Date(submission.submittedAt).toLocaleDateString()}</TableCell>
+                    <TableCell>
+                      <Button
+                        variant="outlined"
+                        color="info"
+                        onClick={() => loadSubmissionDetails(submission.id)}
+                      >
+                        View Data
+                      </Button>
+                    </TableCell>
+                    <TableCell>
+                      <Button
+                        variant="outlined"
+                        color="primary"
+                        onClick={() => setViewSubmission(submission)}
+                        sx={{ mr: 1 }}
+                      >
+                        View
+                      </Button>
+                      <Button
+                        variant="contained"
+                        color="primary"
+                        onClick={() => setSelectedSubmission(submission)}
+                      >
+                        Review
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={5} align="center">No submissions pending review</TableCell>
                 </TableRow>
-              ))}
+              )}
             </TableBody>
           </Table>
         </TableContainer>
       </Paper>
+
+      {/* Dialog for summary view */}
+      <Dialog
+        open={viewSubmission !== null}
+        onClose={() => setViewSubmission(null)}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle>ESG Submission Summary</DialogTitle>
+        <DialogContent>
+          {viewSubmission && (
+            <Box>
+              <Typography variant="subtitle1">
+                <strong>Submitted by:</strong> {viewSubmission.submittedBy?.name}
+              </Typography>
+              <Typography variant="subtitle1">
+                <strong>Company:</strong> {viewSubmission.company?.name}
+              </Typography>
+              <Typography variant="subtitle1">
+                <strong>Date:</strong> {new Date(viewSubmission.submittedAt).toLocaleString()}
+              </Typography>
+              
+              {viewSubmission.environmentalMetrics && (
+                renderMetricSection(viewSubmission.environmentalMetrics, 'Environmental Metrics')
+              )}
+              
+              {viewSubmission.socialMetrics && (
+                renderMetricSection(viewSubmission.socialMetrics, 'Social Metrics')
+              )}
+              
+              {viewSubmission.governanceMetrics && (
+                renderMetricSection(viewSubmission.governanceMetrics, 'Governance Metrics')
+              )}
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setViewSubmission(null)} color="primary">
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
+      
+      {/* Dialog for detailed submission data */}
+      <Dialog
+        open={showDetailsDialog}
+        onClose={() => setShowDetailsDialog(false)}
+        maxWidth="lg"
+        fullWidth
+      >
+        <DialogTitle sx={{ bgcolor: '#0A3D0A', color: 'white', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Typography variant="h6">Detailed ESG Submission Data</Typography>
+          <IconButton onClick={() => setShowDetailsDialog(false)} color="inherit" edge="end">
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent dividers sx={{ p: 3 }}>
+          {loadingDetails ? (
+            <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
+              <Typography>Loading submission data...</Typography>
+            </Box>
+          ) : submissionDetails ? (
+            <Box>
+              {/* Submission Metadata */}
+              <Paper elevation={1} sx={{ p: 2, mb: 3, bgcolor: '#f5f5f5' }}>
+                <Typography variant="h6" gutterBottom color="primary">
+                  Submission Information
+                </Typography>
+                <Grid container spacing={2}>
+                  <Grid item xs={12} md={4}>
+                    <Typography variant="body1">
+                      <strong>Submitted By:</strong> {submissionDetails.submittedBy?.name}
+                    </Typography>
+                  </Grid>
+                  <Grid item xs={12} md={4}>
+                    <Typography variant="body1">
+                      <strong>Company:</strong> {submissionDetails.company?.name}
+                    </Typography>
+                  </Grid>
+                  <Grid item xs={12} md={4}>
+                    <Typography variant="body1">
+                      <strong>Date:</strong> {new Date(submissionDetails.submittedAt).toLocaleString()}
+                    </Typography>
+                  </Grid>
+                </Grid>
+              </Paper>
+  
+              {/* Environmental Data Section */}
+              <Box sx={{ mb: 4 }}>
+                <Typography variant="h6" sx={{ 
+                  bgcolor: '#C8E6C9', 
+                  color: '#0A3D0A', 
+                  p: 1.5, 
+                  borderRadius: 1, 
+                  mb: 2, 
+                  fontWeight: 'bold' 
+                }}>
+                  Environmental Data
+                </Typography>
+                <TableContainer component={Paper} variant="outlined">
+                  <Table size="medium">
+                    <TableHead>
+                      <TableRow sx={{ bgcolor: '#f8f8f8' }}>
+                        <TableCell><strong>Metric</strong></TableCell>
+                        <TableCell><strong>Value</strong></TableCell>
+                        <TableCell><strong>Unit</strong></TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {submissionDetails.environmentalMetrics && Object.entries(submissionDetails.environmentalMetrics).map(([key, value]) => {
+                        if (key === 'unit') return null;
+                        const unit = submissionDetails.environmentalMetrics.unit || '';
+                        return (
+                          <TableRow key={`env-${key}`}>
+                            <TableCell>{key.replace(/([A-Z])/g, ' $1').trim()}</TableCell>
+                            <TableCell>{value}</TableCell>
+                            <TableCell>{unit}</TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              </Box>
+  
+              {/* Social Data Section */}
+              <Box sx={{ mb: 4 }}>
+                <Typography variant="h6" sx={{ 
+                  bgcolor: '#FFECB3', 
+                  color: '#775500', 
+                  p: 1.5, 
+                  borderRadius: 1, 
+                  mb: 2, 
+                  fontWeight: 'bold' 
+                }}>
+                  Social Data
+                </Typography>
+                <TableContainer component={Paper} variant="outlined">
+                  <Table size="medium">
+                    <TableHead>
+                      <TableRow sx={{ bgcolor: '#f8f8f8' }}>
+                        <TableCell><strong>Metric</strong></TableCell>
+                        <TableCell><strong>Value</strong></TableCell>
+                        <TableCell><strong>Unit</strong></TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {submissionDetails.socialMetrics && Object.entries(submissionDetails.socialMetrics).map(([key, value]) => {
+                        if (key === 'unit') return null;
+                        const unit = submissionDetails.socialMetrics.unit || '';
+                        return (
+                          <TableRow key={`soc-${key}`}>
+                            <TableCell>{key.replace(/([A-Z])/g, ' $1').trim()}</TableCell>
+                            <TableCell>{value}</TableCell>
+                            <TableCell>{unit}</TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              </Box>
+  
+              {/* Governance Data Section */}
+              <Box sx={{ mb: 2 }}>
+                <Typography variant="h6" sx={{ 
+                  bgcolor: '#BBDEFB', 
+                  color: '#0D47A1', 
+                  p: 1.5, 
+                  borderRadius: 1, 
+                  mb: 2, 
+                  fontWeight: 'bold' 
+                }}>
+                  Governance Data
+                </Typography>
+                <TableContainer component={Paper} variant="outlined">
+                  <Table size="medium">
+                    <TableHead>
+                      <TableRow sx={{ bgcolor: '#f8f8f8' }}>
+                        <TableCell><strong>Metric</strong></TableCell>
+                        <TableCell><strong>Value</strong></TableCell>
+                        <TableCell><strong>Unit</strong></TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {submissionDetails.governanceMetrics && Object.entries(submissionDetails.governanceMetrics).map(([key, value]) => {
+                        if (key === 'unit') return null;
+                        const unit = submissionDetails.governanceMetrics.unit || '';
+                        return (
+                          <TableRow key={`gov-${key}`}>
+                            <TableCell>{key.replace(/([A-Z])/g, ' $1').trim()}</TableCell>
+                            <TableCell>{value}</TableCell>
+                            <TableCell>{unit}</TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              </Box>
+            </Box>
+          ) : (
+            <Box sx={{ p: 2 }}>
+              <Typography color="error">No submission data available</Typography>
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button variant="contained" onClick={() => setShowDetailsDialog(false)} color="primary">
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       <Dialog
         open={Boolean(selectedSubmission)}
@@ -157,20 +403,20 @@ const ESGApprovalList = () => {
           {selectedSubmission && (
             <Box sx={{ mt: 2 }}>
               <Typography variant="subtitle1" gutterBottom>
-                Submitted by {selectedSubmission.submitted_by_name} on{' '}
-                {new Date(selectedSubmission.created_at).toLocaleString()}
+                Submitted by {selectedSubmission.submittedBy?.name} on{' '}
+                {new Date(selectedSubmission.submittedAt).toLocaleString()}
               </Typography>
 
               {renderMetricSection(
-                selectedSubmission.environmental_metrics,
+                selectedSubmission.environmentalMetrics,
                 'Environmental Metrics'
               )}
               {renderMetricSection(
-                selectedSubmission.social_metrics,
+                selectedSubmission.socialMetrics,
                 'Social Metrics'
               )}
               {renderMetricSection(
-                selectedSubmission.governance_metrics,
+                selectedSubmission.governanceMetrics,
                 'Governance Metrics'
               )}
 

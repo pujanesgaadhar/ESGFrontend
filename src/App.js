@@ -9,7 +9,7 @@ import AdminDashboard from './pages/AdminDashboard';
 import ManagerDashboard from './pages/ManagerDashboard';
 import RepresentativeDashboard from './pages/RepresentativeDashboard';
 import CompanyDashboard from './pages/CompanyDashboard';
-import Navigation from './components/Navigation';
+import Navigation from './components/Navigation.jsx';
 
 function App() {
   return (

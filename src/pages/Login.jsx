@@ -7,10 +7,11 @@ import {
   Typography,
   Card,
   CardContent,
-
-  Alert
+  Alert,
+  Paper
 } from '@mui/material';
 import { useAuth } from '../context/AuthContext';
+import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 
 
 const Login = () => {
@@ -69,17 +70,54 @@ const Login = () => {
     <Container component="main" maxWidth="xs">
       <Box
         sx={{
-          marginTop: 8,
+          marginTop: 4,
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
         }}
       >
-        <Card elevation={3} sx={{ width: '100%', mt: 3 }}>
+        <Paper
+          elevation={0}
+          sx={{
+            p: 3,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            background: 'transparent'
+          }}
+        >
+          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mb: 3 }}>
+            <Box 
+              component="img"
+              src="/images/esgaadhar-logo.svg"
+              alt="ESGAadhar Logo"
+              sx={{ 
+                height: 100,
+                mb: 2
+              }}
+            />
+          </Box>
+          <Typography variant="h6" sx={{ mb: 3, fontWeight: 500 }}>
+            Empowering Sustainable Business
+          </Typography>
+        </Paper>
+
+        <Card 
+          elevation={3} 
+          sx={{ 
+            width: '100%', 
+            mt: 2,
+            borderRadius: 2,
+            bgcolor: 'background.paper'
+          }}
+        >
           <CardContent>
-            <Typography component="h1" variant="h5" align="center" gutterBottom>
-              ESG Framework Login
-            </Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', mb: 3, justifyContent: 'center' }}>
+              <LockOutlinedIcon sx={{ mr: 1 }} />
+              <Typography component="h2" variant="h6">
+                Sign In
+              </Typography>
+            </Box>
             {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
             <Box component="form" onSubmit={handleSubmit} sx={{ mt: 1 }}>
 
@@ -111,7 +149,12 @@ const Login = () => {
                 type="submit"
                 fullWidth
                 variant="contained"
-                sx={{ mt: 3, mb: 2 }}
+                sx={{ 
+                  mt: 3, 
+                  mb: 2,
+                  fontSize: '1rem',
+                  py: 1.5
+                }}
               >
                 Sign In
               </Button>

@@ -141,7 +141,9 @@ export const addUser = (data) => {
 export const updateUser = (id, data) => api.put(`/api/users/${id}`, data);
 export const deleteUser = (id) => api.delete(`/api/users/${id}`);
 export const getNotifications = () => api.get('/api/users/notifications');
-export const markNotificationRead = (id) => api.put(`/api/users/notifications/${id}`);
+export const markNotificationRead = (id) => api.put(`/api/users/notifications/${id}/read`);
+export const deleteNotification = (id) => api.delete(`/api/users/notifications/${id}`);
+export const deleteNotificationBySubmissionId = (submissionId) => api.delete(`/api/users/notifications/submission/${submissionId}`);
 
 // ESG API
 export const submitESGData = (data) => {
@@ -159,7 +161,8 @@ export const getChartData = () => {
   return api.get('/api/esg/chart-data');
 };
 
-export const reviewSubmission = (id, data) => api.put(`/api/esg/${id}/review`, data);
-export const getSubmissionHistory = () => api.get('/api/esg/history');
+export const reviewSubmission = (id, data) => api.put(`/api/esg/submissions/${id}/review`, data);
+export const getSubmissionById = (id) => api.get(`/api/esg/submissions/${id}`);
+export const getSubmissionHistory = () => api.get('/api/esg/submissions/history');
 
 export default api;

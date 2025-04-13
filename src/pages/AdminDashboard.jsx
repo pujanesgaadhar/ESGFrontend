@@ -139,7 +139,7 @@ const AdminDashboard = () => {
   };
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', bgcolor: '#f5f5f5', width: '100%' }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', width: '100%' }}>
       <Container maxWidth="lg" sx={{ p: { xs: 2, sm: 3 }, height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
         {error && (
           <Alert severity="error" sx={{ mb: 3, width: '100%' }}>
@@ -161,7 +161,10 @@ const AdminDashboard = () => {
                 borderRadius: 2,
                 overflow: 'hidden',
                 width: '100%',
-                maxWidth: '100%'
+                maxWidth: '100%',
+                backgroundColor: '#FFFFFF',
+                border: '1px solid rgba(46, 125, 50, 0.1)',
+                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)'
               }}
             >
               <Box sx={{ 
@@ -172,13 +175,20 @@ const AdminDashboard = () => {
                 mb: 2,
                 gap: 2
               }}>
-                <Typography component="h2" variant="h6" color="primary" gutterBottom sx={{ m: 0 }}>
+                <Typography component="h2" variant="h6" gutterBottom sx={{ m: 0, color: 'primary.main', fontWeight: 'bold' }}>
                   Companies
                 </Typography>
                 <Button 
                   variant="contained" 
-                  color="primary" 
                   onClick={() => setAddCompanyDialogOpen(true)}
+                  sx={{
+                    bgcolor: 'primary.main',
+                    color: 'white',
+                    '&:hover': {
+                      bgcolor: 'primary.dark',
+                    },
+                    textTransform: 'none',
+                  }}
                 >
                   Add Company
                 </Button>
@@ -194,27 +204,27 @@ const AdminDashboard = () => {
                 }}>
                   <TableHead>
                     <TableRow>
-                      <TableCell sx={{ minWidth: 200, fontWeight: 'bold' }}>Company Name</TableCell>
-                      <TableCell sx={{ minWidth: 100, fontWeight: 'bold' }}>Status</TableCell>
-                      <TableCell align="right" sx={{ minWidth: 100, fontWeight: 'bold' }}>Actions</TableCell>
+                      <TableCell sx={{ minWidth: 200, fontWeight: 'bold', color: 'primary.main' }}>Company Name</TableCell>
+                      <TableCell sx={{ minWidth: 100, fontWeight: 'bold', color: 'primary.main' }}>Status</TableCell>
+                      <TableCell align="right" sx={{ minWidth: 100, fontWeight: 'bold', color: 'primary.main' }}>Actions</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
                     {companies.length > 0 ? (
                       companies.map((company) => (
                         <TableRow key={company.id}>
-                          <TableCell>{company.name}</TableCell>
+                          <TableCell sx={{ color: 'text.primary', fontWeight: 500 }}>{company.name}</TableCell>
                           <TableCell>
                             <Box 
                               sx={{ 
                                 display: 'inline-block',
-                                px: 1, 
+                                px: 1.5, 
                                 py: 0.5, 
                                 borderRadius: 1, 
                                 bgcolor: company.status === 'active' ? 'success.light' : 'warning.light',
                                 color: company.status === 'active' ? 'success.dark' : 'warning.dark',
                                 fontSize: '0.75rem',
-                                fontWeight: 'bold'
+                                fontWeight: 'medium'
                               }}
                             >
                               {company.status}
@@ -224,8 +234,7 @@ const AdminDashboard = () => {
                             <IconButton 
                               size="small" 
                               onClick={() => handleDeleteCompany(company.id)}
-                              color="error"
-                              sx={{ ml: 1 }}
+                              sx={{ color: 'error.main', '&:hover': { color: 'error.dark' } }}
                             >
                               <DeleteIcon fontSize="small" />
                             </IconButton>
@@ -282,14 +291,21 @@ const AdminDashboard = () => {
                 mb: 2,
                 gap: 2
               }}>
-                <Typography component="h2" variant="h6" color="primary" gutterBottom sx={{ m: 0 }}>
+                <Typography component="h2" variant="h6" gutterBottom sx={{ m: 0, color: 'primary.main', fontWeight: 'bold' }}>
                   Users
                 </Typography>
                 <Button 
                   variant="contained" 
-                  color="primary"
                   onClick={() => setAddUserDialogOpen(true)}
-                  sx={{ whiteSpace: 'nowrap' }}
+                  sx={{ 
+                    bgcolor: 'primary.main',
+                    color: 'white',
+                    '&:hover': {
+                      bgcolor: 'primary.dark',
+                    },
+                    textTransform: 'none',
+                    whiteSpace: 'nowrap'
+                  }}
                 >
                   Add User
                 </Button>
@@ -305,11 +321,11 @@ const AdminDashboard = () => {
                 }}>
                   <TableHead>
                     <TableRow>
-                      <TableCell sx={{ minWidth: 150, fontWeight: 'bold' }}>Name</TableCell>
-                      <TableCell sx={{ minWidth: 200, fontWeight: 'bold' }}>Email</TableCell>
-                      <TableCell sx={{ minWidth: 100, fontWeight: 'bold' }}>Role</TableCell>
-                      <TableCell sx={{ minWidth: 150, fontWeight: 'bold' }}>Company</TableCell>
-                      <TableCell align="right" sx={{ minWidth: 100, fontWeight: 'bold' }}>Actions</TableCell>
+                      <TableCell sx={{ minWidth: 150, fontWeight: 'bold', color: 'primary.main' }}>Name</TableCell>
+                      <TableCell sx={{ minWidth: 200, fontWeight: 'bold', color: 'primary.main' }}>Email</TableCell>
+                      <TableCell sx={{ minWidth: 100, fontWeight: 'bold', color: 'primary.main' }}>Role</TableCell>
+                      <TableCell sx={{ minWidth: 150, fontWeight: 'bold', color: 'primary.main' }}>Company</TableCell>
+                      <TableCell align="right" sx={{ minWidth: 100, fontWeight: 'bold', color: 'primary.main' }}>Actions</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
@@ -339,21 +355,12 @@ const AdminDashboard = () => {
                               {user.role.toLowerCase()}
                             </Box>
                           </TableCell>
-                          <TableCell>
-                            <Box 
-                              sx={{ 
-                                display: 'inline-block',
-                                px: 1, 
-                                py: 0.5, 
-                                borderRadius: 1, 
-                                bgcolor: user.company_name ? 'success.light' : 'grey.200',
-                                color: user.company_name ? 'success.dark' : 'grey.700',
-                                fontSize: '0.75rem',
-                                fontWeight: 'medium',
-                              }}
-                            >
-                              {user.company_name || 'N/A'}
-                            </Box>
+                          <TableCell sx={{ 
+                            color: user.company_name ? 'text.primary' : 'text.secondary',
+                            fontSize: '0.875rem',
+                            fontWeight: 500
+                          }}>
+                            {user.company_name || 'N/A'}
                           </TableCell>
                           <TableCell align="right">
                             <IconButton 
