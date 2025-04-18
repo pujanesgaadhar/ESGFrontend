@@ -81,9 +81,9 @@ const Navigation = () => {
     }
   };
   
-  // Load notifications when component mounts
+  // Load notifications when component mounts (only for non-admin users)
   useEffect(() => {
-    if (user) {
+    if (user && user.role?.toLowerCase() !== 'admin') {
       fetchNotifications();
     }
   }, [user]);

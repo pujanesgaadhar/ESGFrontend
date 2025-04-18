@@ -37,6 +37,14 @@ const ESGMetricsChart = ({ type, data, title }) => {
     },
   };
 
+  if (!data || !data.labels || !Array.isArray(data.datasets)) {
+    return (
+      <div style={{ color: '#888', padding: '16px', textAlign: 'center' }}>
+        No data available for this chart.
+      </div>
+    );
+  }
+
   const chartData = {
     labels: data.labels,
     datasets: data.datasets.map((dataset) => ({

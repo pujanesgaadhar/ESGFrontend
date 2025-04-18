@@ -21,12 +21,15 @@ api.interceptors.request.use((config) => {
 // Auth API
 export const loginUser = (email, password) => {
   console.log('Making login request with:', email);
-  return api.post('/auth/login', { email, password })
+  return api.post('/api/auth/login', { email, password })
     .then(response => {
       console.log('Login successful, response:', response.data);
-      const { token } = response.data;
+      const { token, user } = response.data;
       if (token) {
         localStorage.setItem('token', token);
+      }
+      if (user) {
+        localStorage.setItem('user', JSON.stringify(user));
       }
       return response;
     })
@@ -164,5 +167,16 @@ export const getChartData = () => {
 export const reviewSubmission = (id, data) => api.put(`/api/esg/submissions/${id}/review`, data);
 export const getSubmissionById = (id) => api.get(`/api/esg/submissions/${id}`);
 export const getSubmissionHistory = () => api.get('/api/esg/submissions/history');
+
+// GHG Emissions API
+export const submitGHGEmissionData = (data) => {
+  return api.post('/api/ghg-emissions', data, {
+    timeout: 30000 // 30 second timeout
+  });
+};
+
+export const getGHGEmissionsByCompany = (companyId) => {
+  return api.get(`/api/ghg-emissions/company/${companyId}`);
+};
 
 export default api;

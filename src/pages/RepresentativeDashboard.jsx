@@ -5,75 +5,45 @@ import {
   Grid,
   Paper,
   Typography,
-  TextField,
-  Button,
   Snackbar,
-  Alert,
-  Card,
-  CardContent,
+  Alert
 } from '@mui/material';
-import { submitESGData } from '../services/api';
-import { notificationEvents } from '../components/Navigation';
+import GHGEmissionForm from '../components/GHGEmissionForm';
 
 const RepresentativeDashboard = () => {
-  const [formData, setFormData] = useState({
-    environmentalScore: '',
-    socialScore: '',
-    governanceScore: '',
-    submissionType: 'ESG',
-  });
-
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: '',
     severity: 'info',
   });
 
+  const [companyId, setCompanyId] = useState(null);
 
+  useEffect(() => {
+    const user = JSON.parse(localStorage.getItem('user'));
+    console.log('User data from localStorage:', user);
+    if (user && user.company && user.company.id) {
+      console.log('Setting company ID:', user.company.id);
+      setCompanyId(user.company.id);
+    } else {
+      console.warn('No company information found in user data');
+    }
+  }, []);
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+  const handleSubmissionSuccess = () => {
+    setSnackbar({
+      open: true,
+      message: 'Data submitted successfully.',
+      severity: 'success',
+    });
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      // Convert scores to numbers
-      const submission = {
-        ...formData,
-        environmentalScore: parseFloat(formData.environmentalScore),
-        socialScore: parseFloat(formData.socialScore),
-        governanceScore: parseFloat(formData.governanceScore),
-      };
-
-      await submitESGData(submission);
-      // Dispatch event to refresh notifications for managers
-      window.dispatchEvent(notificationEvents.refresh);
-      setSnackbar({
-        open: true,
-        message: 'ESG data submitted successfully!',
-        severity: 'success',
-      });
-
-      // Reset form
-      setFormData({
-        environmentalScore: '',
-        socialScore: '',
-        governanceScore: '',
-        submissionType: 'ESG',
-      });
-    } catch (error) {
-      console.error('Error submitting ESG data:', error);
-      setSnackbar({
-        open: true,
-        message: 'Error submitting ESG data',
-        severity: 'error',
-      });
-    }
+  const handleSubmissionError = (error) => {
+    setSnackbar({
+      open: true,
+      message: `Error submitting GHG data: ${error.message}`,
+      severity: 'error',
+    });
   };
 
   const handleCloseSnackbar = () => {
@@ -83,98 +53,45 @@ const RepresentativeDashboard = () => {
   return (
     <Box sx={{ display: 'flex', width: '100%' }}>
       <Container maxWidth="lg" sx={{ mt: 4, mb: 4, width: '100%' }}>
-        <Grid container spacing={3}>
-          {/* ESG Submission Form */}
-          <Grid item xs={12}>
-            <Paper sx={{ 
-              p: 3, 
-              borderRadius: 2,
-              backgroundColor: '#FFFFFF',
-              border: '1px solid rgba(46, 125, 50, 0.1)',
-              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)'
-            }}>
-              <Typography component="h2" variant="h6" gutterBottom sx={{ color: '#2E7D32', fontWeight: 'bold' }}>
-                Submit ESG Data
+      <Grid container spacing={3}>
+        <Grid item xs={12}>
+          {companyId ? (
+            <GHGEmissionForm
+              companyId={companyId}
+              onSuccess={handleSubmissionSuccess}
+              onError={handleSubmissionError}
+            />
+          ) : (
+            <Paper
+              sx={{
+                p: 2,
+                display: 'flex',
+                flexDirection: 'column',
+                backgroundColor: '#f5f5f5',
+              }}
+            >
+              <Typography variant="h6" color="error">
+                Error: Company information not found. Please contact support.
               </Typography>
-              <Box component="form" onSubmit={handleSubmit} sx={{ mt: 2 }}>
-                <Grid container spacing={3}>
-                  <Grid item xs={12} md={4}>
-                    <TextField
-                      required
-                      fullWidth
-                      label="Environmental Score"
-                      name="environmentalScore"
-                      type="number"
-                      value={formData.environmentalScore}
-                      onChange={handleInputChange}
-                      inputProps={{ min: 0, max: 100 }}
-                    />
-                  </Grid>
-                  <Grid item xs={12} md={4}>
-                    <TextField
-                      required
-                      fullWidth
-                      label="Social Score"
-                      name="socialScore"
-                      type="number"
-                      value={formData.socialScore}
-                      onChange={handleInputChange}
-                      inputProps={{ min: 0, max: 100 }}
-                    />
-                  </Grid>
-                  <Grid item xs={12} md={4}>
-                    <TextField
-                      required
-                      fullWidth
-                      label="Governance Score"
-                      name="governanceScore"
-                      type="number"
-                      value={formData.governanceScore}
-                      onChange={handleInputChange}
-                      inputProps={{ min: 0, max: 100 }}
-                    />
-                  </Grid>
-                  <Grid item xs={12}>
-                    <Button
-                      type="submit"
-                      fullWidth
-                      variant="contained"
-                      sx={{ 
-                        mt: 3, 
-                        mb: 2,
-                        background: 'linear-gradient(45deg, #2E7D32, #558B2F)',
-                        color: 'white',
-                        '&:hover': {
-                          background: 'linear-gradient(45deg, #558B2F, #2E7D32)',
-                        },
-                        textTransform: 'none',
-                        fontSize: '1rem',
-                        py: 1.5
-                      }}
-                    >
-                      Submit
-                    </Button>
-                  </Grid>
-                </Grid>
-              </Box>
             </Paper>
-          </Grid>
+          )}
         </Grid>
-
-        <Snackbar
-          open={snackbar.open}
-          autoHideDuration={6000}
+      </Grid>
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={3000}
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+      >
+        <Alert
           onClose={handleCloseSnackbar}
-          anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+          severity="success"
+          variant="filled"
+          sx={{ backgroundColor: '#0A3D0A', color: '#fff' }}
         >
-          <Alert
-            onClose={handleCloseSnackbar}
-            severity={snackbar.severity}
-            variant="filled"
-          >
-            {snackbar.message}
-          </Alert>
-        </Snackbar>
+          Data submitted successfully.
+        </Alert>
+      </Snackbar>
       </Container>
     </Box>
   );

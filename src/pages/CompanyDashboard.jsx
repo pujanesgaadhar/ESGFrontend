@@ -34,14 +34,14 @@ const CompanyDashboard = () => {
       // Show success message
       setNotification({
         open: true,
-        message: 'ESG data submitted successfully!',
+        message: 'Data submitted successfully.',
         severity: 'success'
       });
     } catch (error) {
       console.error('Error submitting ESG data:', error);
       setNotification({
         open: true,
-        message: error.response?.data?.message || 'Failed to submit ESG data. Please try again.',
+        message: error.response?.data?.message || 'Failed to submit data. Please try again.',
         severity: 'error'
       });
     }
@@ -72,17 +72,17 @@ const CompanyDashboard = () => {
 
       <Snackbar
         open={notification.open}
-        autoHideDuration={6000}
+        autoHideDuration={3000}
         onClose={handleCloseNotification}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
       >
-        <Alert 
-          onClose={handleCloseNotification} 
-          severity={notification.severity}
+        <Alert
+          onClose={handleCloseNotification}
+          severity="success"
           variant="filled"
-          sx={{ width: '100%' }}
+          sx={{ backgroundColor: '#0A3D0A', color: '#fff' }}
         >
-          {notification.message}
+          Data submitted successfully.
         </Alert>
       </Snackbar>
     </Container>
