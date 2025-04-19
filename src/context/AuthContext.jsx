@@ -16,7 +16,7 @@ export const AuthProvider = ({ children }) => {
     
     console.log('AuthContext init - Stored user:', storedUser);
     console.log('AuthContext init - Token exists:', !!storedToken);
-    
+    console.log('Pujan Patel' + storedToken);
     if (storedUser && storedToken) {
       const userData = JSON.parse(storedUser);
       console.log('AuthContext init - User data found:', userData);

@@ -42,6 +42,7 @@ const Login = () => {
       // Check what's in localStorage to debug
       const storedUser = localStorage.getItem('user');
       const storedToken = localStorage.getItem('token');
+      console.log(storedToken + "Pujan Patel")
       console.log('Login.jsx: After login - User in localStorage:', storedUser ? JSON.parse(storedUser) : null);
       console.log('Login.jsx: After login - Token exists:', !!storedToken);
       

@@ -175,8 +175,8 @@ export const submitGHGEmissionData = (data) => {
   });
 };
 
-export const getGHGEmissionsByCompany = (companyId) => {
-  return api.get(`/api/ghg-emissions/company/${companyId}`);
+export const getGHGEmissionsByCompany = () => {
+  return api.get('/api/ghg-emissions/company/pending');
 };
 
 export default api;

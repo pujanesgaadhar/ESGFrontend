@@ -31,6 +31,7 @@ export const AuthProvider = ({ children }) => {
     const response = await apiLogin(email, password);
     const { token, user } = response.data;
     localStorage.setItem('token', token);
+    console.log(token + "Pujan Patel")
     setUser(user);
 
     // Navigate based on user role
