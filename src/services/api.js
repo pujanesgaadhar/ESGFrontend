@@ -9,11 +9,12 @@ const api = axios.create({
   },
 });
 
-// Add Bearer token to requests
+// Add token to requests
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
   if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+    // Send token without 'Bearer ' prefix since backend expects raw token
+    config.headers.Authorization = token;
   }
   return config;
 });
