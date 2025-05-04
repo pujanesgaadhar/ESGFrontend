@@ -20,7 +20,7 @@ import {
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { getNotifications, markNotificationRead, deleteNotification } from '../services/api';
+import { getNotifications, markNotificationAsRead, deleteNotification } from '../services/api';
 import MenuIcon from '@mui/icons-material/Menu';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import LogoutIcon from '@mui/icons-material/Logout';
@@ -39,25 +39,21 @@ const Navigation = () => {
   
   // State for notifications
   const [notifications, setNotifications] = useState([]);
-  const [loading, setLoading] = useState(false);
   
   // Fetch notifications from backend API
   const fetchNotifications = async () => {
     try {
-      setLoading(true);
       const response = await getNotifications();
       setNotifications(response.data);
     } catch (error) {
       console.error('Error fetching notifications:', error);
-    } finally {
-      setLoading(false);
     }
   };
   
   // Mark notification as read
   const markAsRead = async (id) => {
     try {
-      await markNotificationRead(id);
+      await markNotificationAsRead(id);
       // Update locally as well for immediate UI feedback
       setNotifications(prev => 
         prev.map(n => n.id === id ? {...n, read: true} : n)
@@ -292,7 +288,7 @@ const Navigation = () => {
                       // Mark all as read and delete them
                       await Promise.all(notifications.map(async (n) => {
                         try {
-                          if (!n.read) await markNotificationRead(n.id);
+                          if (!n.read) await markAsRead(n.id);
                           await deleteNotification(n.id);
                         } catch (err) {
                           console.error(`Error processing notification ${n.id}:`, err);

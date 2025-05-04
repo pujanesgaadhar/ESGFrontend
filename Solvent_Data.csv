@@ -1,0 +1,26 @@
+Unnamed: 0,Unnamed: 1,Unnamed: 2,Unnamed: 3,Unnamed: 4,Unnamed: 5,Unnamed: 6,Unnamed: 7,Unnamed: 8,Unnamed: 9,Unnamed: 10,Unnamed: 11,Unnamed: 12,Unnamed: 13,Unnamed: 14,Unnamed: 15,Unnamed: 16,Unnamed: 17,Unnamed: 18,Unnamed: 19,Unnamed: 20,Unnamed: 21,Unnamed: 22
+,Solvent Consumption,Solvent-1 Consumption,Solvent 1 Recovered,Solvent-1 Loss,Solvent-2 Consumption,Solvent 2 Recovered,Solvent-2 Loss,Solvent-3 Consumption,Solvent 3 Recovered,Solvent-3 Loss,Solvent-4 Consumption,Solvent 4 Recovered,Solvent-4 Loss,Solvent-5 Consumption,Solvent 5 Recovered,Solvent-5 Loss,Solvent-6 Consumption,Solvent 6 Recovered,Solvent-6 Loss,Total Solvent Consumption,Total Solvent Recovered,Total  Solvent Loss
+,Name of solvent,Methanol,,,Toluene,Name,Name,Pyridine,Name,Name,Chloroform,Name,Name,Iso Propyl Alcohol,Name,Name,n-Heptane,Name,Name,,,
+,Unit,Ltr,Ltr,Ltr,Ltr,Ltr,Ltr,Ltr,Ltr,Ltr,Ltr,Ltr,Ltr,Ltr,Ltr,Ltr,Ltr,Ltr,Ltr,Ltr,Ltr,Ltr
+,Month/Year,Please fill data in yellow highligted cells only. This sheet is formulated sheet.,,,,,,,,,,,,,,,,,,,,
+,2023-04-01 00:00:00,19745,,,11299,,,183,0,0,0.5,0,0,150,0,0,1,0,0,31378.5,0,0
+,2023-05-01 00:00:00,23757,,,1.5,,,2590,0,0,0,0,0,0,0,0,0,0,0,26348.5,0,0
+,2023-06-01 00:00:00,19972,,,0,,,0,0,0,0,0,0,0,0,0,1,0,0,19973,0,0
+,2023-07-01 00:00:00,36245,,,0,,,0,0,0,0,0,0,100,0,0,1,0,0,36346,0,0
+,2023-08-01 00:00:00,21228,,,0,,,0,0,0,0,0,0,0,0,0,0,0,0,21228,0,0
+,2023-09-01 00:00:00,4366,,,0,,,0,0,0,0,0,0,150,0,0,0,0,0,4516,0,0
+,2023-10-01 00:00:00,20917,,,0,,,0,0,0,0,0,0,0,0,0,0,0,0,20917,0,0
+,2023-11-01 00:00:00,21442,,,0,,,0,0,0,0,0,0,0,0,0,1,0,0,21443,0,0
+,2023-12-01 00:00:00,13414,,,9765,,,0,0,0,0,0,0,200,0,0,0,0,0,23379,0,0
+,2024-01-01 00:00:00,38901,,,0,,,2590,0,0,0,0,0,0,0,0,1,0,0,41492,0,0
+,2024-02-01 00:00:00,21376,,,1.5,,,0,0,0,0.5,0,0,40,0,0,0,0,0,21418,0,0
+,2024-03-01 00:00:00,20429,,,1002,,,127,0,0,0,0,0,0,0,0,1,0,0,21559,0,0
+,Total,261792,0,0,22069,0,0,5490,0,0,1,0,0,640,0,0,6,0,0,289998,0,0
+,,,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,,,
+ ,,,,,,,,,,,,,,,,,,,,,,

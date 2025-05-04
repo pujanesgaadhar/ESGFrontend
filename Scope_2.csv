@@ -1,0 +1,21 @@
+Unnamed: 0,Unnamed: 1,Unnamed: 2,Unnamed: 3,Unnamed: 4,Unnamed: 5,Unnamed: 6
+,,,,,,
+,,,,,,
+,,,,GHG Emission Source Data Collection Sheet_Scope 2,,
+,Activity ,Grid Electricity from MGVCL,,,,Energy Generation from DG
+,Unit,kwh,,,,kwh
+,Source of Data,Electricity Consumption Bills,,,,DG Logbook
+,Month/Year,Please fill data in yellow highligted cells only. This sheet is formulated sheet.,,,,
+,2023-04-01 00:00:00,396870,,,,3848
+,2023-05-01 00:00:00,394470,,,,7344
+,2023-06-01 00:00:00,352870,,,,8472
+,2023-07-01 00:00:00,383330,,,,8116
+,2023-08-01 00:00:00,414810,,,,4124
+,2023-09-01 00:00:00,394530,,,,7172
+,2023-10-01 00:00:00,454270,,,,2168
+,2023-11-01 00:00:00,189410,,,,1064
+,2023-12-01 00:00:00,460220,,,,304
+,2024-01-01 00:00:00,475560,,,,2728
+,2024-02-01 00:00:00,451710,,,,6340
+,2024-03-01 00:00:00,475050,,,,2236
+,Total,4843100,,,,53916

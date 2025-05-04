@@ -1,0 +1,5 @@
+Start Date,End Date,Category,Activity,Source,Quantity,Unit,Emission Factor,Emission Factor Unit,Calculation Method,Notes
+2025-01-01,2025-01-31,Solvent Consumption,Cleaning,Acetone,200,liters,2.2,kg CO2e/liter,Mass Balance Method,Sample data
+2025-01-01,2025-01-31,Solvent Recovery,Distillation,Acetone,50,liters,0.5,kg CO2e/liter,Mass Balance Method,Sample data
+2025-01-01,2025-01-31,Solvent Loss,Evaporation,Acetone,150,liters,2.2,kg CO2e/liter,Mass Balance Method,Sample data
+2025-01-01,2025-01-31,Solvent Consumption,Degreasing,Toluene,100,liters,2.5,kg CO2e/liter,Mass Balance Method,Sample data

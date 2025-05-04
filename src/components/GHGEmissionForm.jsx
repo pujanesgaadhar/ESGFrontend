@@ -17,6 +17,7 @@ import {
 import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { submitGHGEmissionData } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 
 const GREEN = '#0A3D0A';
 const LIGHT_GREEN = '#9DC183';
@@ -48,6 +49,7 @@ function a11yProps(index) {
 
 const GHGEmissionForm = ({ companyId, onSuccess, onError }) => {
   const [tab, setTab] = useState(0);
+  const { user } = useAuth();
 
   // Individual state for each form section
   const [scope1, setScope1] = useState({
@@ -55,14 +57,16 @@ const GHGEmissionForm = ({ companyId, onSuccess, onError }) => {
     fuelType: '',
     quantity: '',
     emissionFactor: '',
-    month: null,
+    startDate: null,
+    endDate: null,
     emissions: '',
   });
   const [scope2, setScope2] = useState({
     source: '',
     energyConsumed: '',
     emissionFactor: '',
-    month: null,
+    startDate: null,
+    endDate: null,
     emissions: '',
   });
   const [scope3, setScope3] = useState({
@@ -72,7 +76,8 @@ const GHGEmissionForm = ({ companyId, onSuccess, onError }) => {
     distance: '',
     weight: '',
     emissionFactor: '',
-    month: null,
+    startDate: null,
+    endDate: null,
     emissions: '',
   });
   const [solvent, setSolvent] = useState({
@@ -80,13 +85,15 @@ const GHGEmissionForm = ({ companyId, onSuccess, onError }) => {
     consumed: '',
     recovered: '',
     loss: '',
-    month: null,
+    startDate: null,
+    endDate: null,
   });
   const [sink, setSink] = useState({
     treeCount: '',
     avgHeight: '',
     species: '',
-    month: null,
+    startDate: null,
+    endDate: null,
     sequestration: '',
   });
 
@@ -147,130 +154,183 @@ const GHGEmissionForm = ({ companyId, onSuccess, onError }) => {
   };
 
   // Date handler for all sections
-  const handleDateChange = (section, value) => {
-    if (section === 'scope1') setScope1({ ...scope1, month: value });
-    if (section === 'scope2') setScope2({ ...scope2, month: value });
-    if (section === 'scope3') setScope3({ ...scope3, month: value });
-    if (section === 'solvent') setSolvent({ ...solvent, month: value });
-    if (section === 'sink') setSink({ ...sink, month: value });
+  const handleDateChange = (section, field, value) => {
+    if (section === 'scope1') {
+      setScope1({ ...scope1, [field]: value });
+    } else if (section === 'scope2') {
+      setScope2({ ...scope2, [field]: value });
+    } else if (section === 'scope3') {
+      setScope3({ ...scope3, [field]: value });
+    } else if (section === 'solvent') {
+      setSolvent({ ...solvent, [field]: value });
+    } else if (section === 'sink') {
+      setSink({ ...sink, [field]: value });
+    }
   };
 
   const handleSubmit = async (event) => {
     event.preventDefault();
     try {
       let payload = null;
-      // Helper to get first/last day of month
-      const getMonthRange = (date) => {
-        if (!date) return { start: null, end: null };
-        const d = new Date(date);
-        const start = new Date(d.getFullYear(), d.getMonth(), 1, 0, 0, 0);
-        const end = new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 59);
+      const formatDatesForSubmission = (startDate, endDate) => {
+        if (!startDate || !endDate) {
+          throw new Error('Both start and end dates are required');
+        }
+        // Format dates with time components
+        const start = new Date(startDate);
+        start.setHours(0, 0, 0, 0); // Start of day
+        
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999); // End of day
+        
         return { start: start.toISOString(), end: end.toISOString() };
       };
-
+      
+      // Prepare payload based on active tab
       if (tab === 0) { // Scope 1
-        if (!scope1.activityType || !scope1.quantity || !scope1.emissionFactor || !scope1.month) {
-          throw new Error('Please fill all required Scope 1 fields.');
+        if (!scope1.activityType || !scope1.fuelType || !scope1.quantity || !scope1.emissionFactor || !scope1.startDate || !scope1.endDate) {
+          throw new Error('Please fill all required Scope 1 fields, including start and end dates.');
         }
-        const { start, end } = getMonthRange(scope1.month);
+        const { start, end } = formatDatesForSubmission(scope1.startDate, scope1.endDate);
         payload = {
-          company: { id: companyId },
+          // Don't send company object - backend will handle this
           scope: 'SCOPE_1',
-          category: scope1.activityType === 'FUEL_COMBUSTION' ? 'STATIONARY_COMBUSTION' : (scope1.activityType === 'PROCESS_EMISSIONS' ? 'PROCESS_EMISSIONS' : 'MOBILE_COMBUSTION'),
-          timeFrame: 'MONTHLY',
+          category: 'STATIONARY_COMBUSTION', // Example, adjust mapping as needed
+          timeFrame: 'CUSTOM',
           startDate: start,
           endDate: end,
           quantity: parseFloat(scope1.quantity),
           unit: 'liters', // Adjust as needed
           emissionFactor: parseFloat(scope1.emissionFactor),
           emissionFactorUnit: 'kgCO2e/liter', // Adjust as needed
+          activity: scope1.fuelType || '',
           notes: '',
+          status: 'PENDING'
         };
       } else if (tab === 1) { // Scope 2
-        if (!scope2.source || !scope2.energyConsumed || !scope2.emissionFactor || !scope2.month) {
-          throw new Error('Please fill all required Scope 2 fields.');
+        if (!scope2.source || !scope2.energyConsumed || !scope2.emissionFactor || !scope2.startDate || !scope2.endDate) {
+          throw new Error('Please fill all required Scope 2 fields, including start and end dates.');
         }
-        const { start, end } = getMonthRange(scope2.month);
+        const { start, end } = formatDatesForSubmission(scope2.startDate, scope2.endDate);
         payload = {
-          company: { id: companyId },
+          // Don't send company object - backend will handle this
           scope: 'SCOPE_2',
           category: scope2.source === 'Grid' ? 'PURCHASED_ELECTRICITY' : 'PURCHASED_STEAM',
-          timeFrame: 'MONTHLY',
+          timeFrame: 'CUSTOM',
           startDate: start,
           endDate: end,
           quantity: parseFloat(scope2.energyConsumed),
           unit: 'kWh', // Adjust as needed
           emissionFactor: parseFloat(scope2.emissionFactor),
           emissionFactorUnit: 'kgCO2e/kWh', // Adjust as needed
+          source: scope2.source,
           notes: '',
+          status: 'PENDING'
         };
       } else if (tab === 2) { // Scope 3
-        if (!scope3.activityType || !scope3.distance || !scope3.weight || !scope3.emissionFactor || !scope3.month) {
-          throw new Error('Please fill all required Scope 3 fields.');
+        if (!scope3.activityType || !scope3.distance || !scope3.weight || !scope3.emissionFactor || !scope3.startDate || !scope3.endDate) {
+          throw new Error('Please fill all required Scope 3 fields, including start and end dates.');
         }
-        const { start, end } = getMonthRange(scope3.month);
+        const { start, end } = formatDatesForSubmission(scope3.startDate, scope3.endDate);
         payload = {
-          company: { id: companyId },
+          // Don't send company object - backend will handle this
           scope: 'SCOPE_3',
           category: 'TRANSPORTATION_DISTRIBUTION', // Example, adjust mapping as needed
-          timeFrame: 'MONTHLY',
+          timeFrame: 'CUSTOM',
           startDate: start,
           endDate: end,
           quantity: parseFloat(scope3.distance) * parseFloat(scope3.weight),
           unit: 'ton-km', // Adjust as needed
           emissionFactor: parseFloat(scope3.emissionFactor),
           emissionFactorUnit: 'kgCO2e/ton-km', // Adjust as needed
-          notes: '',
+          activity: scope3.activityType,
+          source: scope3.vehicleType || '',
+          notes: `Distance: ${scope3.distance}, Weight: ${scope3.weight}`,
+          status: 'PENDING'
         };
       } else if (tab === 3) { // Solvent
-        if (!solvent.name || !solvent.consumed || !solvent.month) {
-          throw new Error('Please fill all required Solvent fields.');
+        if (!solvent.name || !solvent.consumed || !solvent.startDate || !solvent.endDate) {
+          throw new Error('Please fill all required Solvent fields, including start and end dates.');
         }
-        const { start, end } = getMonthRange(solvent.month);
+        const { start, end } = formatDatesForSubmission(solvent.startDate, solvent.endDate);
         payload = {
-          company: { id: companyId },
-          scope: 'SCOPE_1', // Or other, depending on your backend
+          // Don't send company object - backend will handle this
+          scope: 'SOLVENT', // Using the correct scope for solvent data
           category: 'PROCESS_EMISSIONS',
-          timeFrame: 'MONTHLY',
+          timeFrame: 'CUSTOM',
           startDate: start,
           endDate: end,
           quantity: parseFloat(solvent.consumed),
-          unit: 'kg', // Adjust as needed
+          unit: 'liters', // Adjust as needed
           emissionFactor: 0, // If available
           emissionFactorUnit: '',
-          notes: `Recovered: ${solvent.recovered}, Loss: ${solvent.loss}`,
+          activity: solvent.name,
+          source: 'Solvent',
+          notes: `Consumed: ${solvent.consumed}, Recovered: ${solvent.recovered || 0}, Loss: ${solvent.loss || 0}`,
+          status: 'PENDING'
         };
       } else if (tab === 4) { // Sink
-        if (!sink.treeCount || !sink.month) {
-          throw new Error('Please fill all required Sink fields.');
+        if (!sink.treeCount || !sink.startDate || !sink.endDate) {
+          throw new Error('Please fill all required Sink fields, including start and end dates.');
         }
-        const { start, end } = getMonthRange(sink.month);
+        const { start, end } = formatDatesForSubmission(sink.startDate, sink.endDate);
         payload = {
-          company: { id: companyId },
-          scope: 'SCOPE_1', // Sinks are often reported separately, adjust as needed
-          category: 'FUGITIVE_EMISSIONS', // Or another appropriate category
-          timeFrame: 'MONTHLY',
+          // Don't send company object - backend will handle this
+          scope: 'SINK', // Using the correct scope for sink data
+          category: 'REFORESTATION', // Using a valid category from the enum
+          timeFrame: 'CUSTOM',
           startDate: start,
           endDate: end,
           quantity: parseInt(sink.treeCount, 10),
           unit: 'trees',
           emissionFactor: 21.77, // sequestration per tree
           emissionFactorUnit: 'kgCO2e/tree/year',
-          notes: `Species: ${sink.species}, Avg Height: ${sink.avgHeight}`,
+          activity: 'Reforestation',
+          source: sink.species || 'Mixed',
+          notes: `Tree Count: ${sink.treeCount}, Species: ${sink.species || 'Not specified'}, Avg Height: ${sink.avgHeight || 'Not specified'}`,
+          status: 'PENDING'
         };
       }
+      
       if (!payload) throw new Error('No emission data to submit.');
-      const response = await submitGHGEmissionData(payload);
+      
+      console.log('Submitting GHG emission data:', JSON.stringify(payload, null, 2));
+      
+      // Determine which scope is being submitted based on the tab index
+      const scopeMap = {
+        0: 'SCOPE_1',
+        1: 'SCOPE_2',
+        2: 'SCOPE_3',
+        3: 'SOLVENT',
+        4: 'SINK'
+      };
+      const currentScope = scopeMap[tab];
+      const scopeDisplay = currentScope.replace('SCOPE_', 'Scope ').replace('SOLVENT', 'Solvent').replace('SINK', 'Sink');
+      
+      // Simplify the payload - the backend will handle notifications
+      const notificationPayload = {
+        ...payload
+      };
+      
+      const response = await submitGHGEmissionData(notificationPayload);
+      console.log('GHG emission submission response:', response);
+      
+      // Check for error response
+      if (response && response.data && response.data.error) {
+        console.error('Server returned an error:', response.data);
+        throw new Error(response.data.error + (response.data.message ? ': ' + response.data.message : ''));
+      }
+      
       if (response && (response.status === 200 || response.status === 201)) {
         if (typeof onSuccess === 'function') {
           onSuccess();
         }
         // Reset the form sections
-        setScope1({ activityType: '', fuelType: '', quantity: '', emissionFactor: '', month: null, emissions: '' });
-        setScope2({ source: '', energyConsumed: '', emissionFactor: '', month: null, emissions: '' });
-        setScope3({ activityType: '', vehicleType: '', fuelType: '', distance: '', weight: '', emissionFactor: '', month: null, emissions: '' });
-        setSolvent({ name: '', consumed: '', recovered: '', loss: '', month: null });
-        setSink({ treeCount: '', avgHeight: '', species: '', month: null, sequestration: '' });
+        setScope1({ activityType: '', fuelType: '', quantity: '', emissionFactor: '', startDate: null, endDate: null, emissions: '' });
+        setScope2({ source: '', energyConsumed: '', emissionFactor: '', startDate: null, endDate: null, emissions: '' });
+        setScope3({ activityType: '', vehicleType: '', fuelType: '', distance: '', weight: '', emissionFactor: '', startDate: null, endDate: null, emissions: '' });
+        setSolvent({ name: '', consumed: '', recovered: '', loss: '', startDate: null, endDate: null });
+        setSink({ treeCount: '', avgHeight: '', species: '', startDate: null, endDate: null, sequestration: '' });
       } else {
         const msg = response && response.data && response.data.message ? response.data.message : 'Submission failed. Please try again.';
         if (typeof onError === 'function') {
@@ -279,6 +339,13 @@ const GHGEmissionForm = ({ companyId, onSuccess, onError }) => {
       }
     } catch (error) {
       console.error('Failed to submit GHG emission data:', error);
+      console.error('Error details:', {
+        message: error.message,
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        responseData: error.response?.data,
+        config: error.config?.url
+      });
       if (typeof onError === 'function') {
         onError(error);
       }
@@ -286,7 +353,7 @@ const GHGEmissionForm = ({ companyId, onSuccess, onError }) => {
   };
 
   return (
-    <Paper sx={{ p: 3, background: LIGHT_GREEN + '10', borderRadius: 3 }}>
+    <Paper sx={{ p: 4, background: LIGHT_GREEN + '10', borderRadius: 3, maxWidth: '1200px', width: '100%', mx: 'auto' }}>
       <Typography variant="h5" color={GREEN} gutterBottom>
         GHG Emissions Data Entry
       </Typography>
@@ -307,8 +374,8 @@ const GHGEmissionForm = ({ companyId, onSuccess, onError }) => {
       </Tabs>
       {/* Scope 1 */}
       {tab === 0 && (
-        <Box component="form" onSubmit={handleSubmit} sx={{ mt: 2 }}>
-          <Grid container spacing={2}>
+        <Box component="form" onSubmit={handleSubmit} sx={{ mt: 3, width: '100%' }}>
+          <Grid container spacing={3}>
             <Grid item xs={12} md={6}>
               <FormControl fullWidth required>
                 <InputLabel>Activity Type</InputLabel>
@@ -363,13 +430,22 @@ const GHGEmissionForm = ({ companyId, onSuccess, onError }) => {
                 InputProps={{ endAdornment: <span>kg CO₂e/unit</span> }}
               />
             </Grid>
-            <Grid item xs={12} md={4}>
+            <Grid item xs={12} md={6}>
               <LocalizationProvider dateAdapter={AdapterDateFns}>
                 <DatePicker
-                  label="Month/Year"
-                  views={["year", "month"]}
-                  value={scope1.month}
-                  onChange={val => handleDateChange('scope1', val)}
+                  label="Start Date"
+                  value={scope1.startDate}
+                  onChange={val => handleDateChange('scope1', 'startDate', val)}
+                  renderInput={params => <TextField {...params} fullWidth required />}
+                />
+              </LocalizationProvider>
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <LocalizationProvider dateAdapter={AdapterDateFns}>
+                <DatePicker
+                  label="End Date"
+                  value={scope1.endDate}
+                  onChange={val => handleDateChange('scope1', 'endDate', val)}
                   renderInput={params => <TextField {...params} fullWidth required />}
                 />
               </LocalizationProvider>
@@ -385,8 +461,8 @@ const GHGEmissionForm = ({ companyId, onSuccess, onError }) => {
       )}
       {/* Scope 2 */}
       {tab === 1 && (
-        <Box component="form" onSubmit={handleSubmit} sx={{ mt: 2 }}>
-          <Grid container spacing={2}>
+        <Box component="form" onSubmit={handleSubmit} sx={{ mt: 3, width: '100%' }}>
+          <Grid container spacing={3}>
             <Grid item xs={12} md={4}>
               <FormControl fullWidth required>
                 <InputLabel>Source</InputLabel>
@@ -424,13 +500,22 @@ const GHGEmissionForm = ({ companyId, onSuccess, onError }) => {
                 required
               />
             </Grid>
-            <Grid item xs={12} md={4}>
+            <Grid item xs={12} md={6}>
               <LocalizationProvider dateAdapter={AdapterDateFns}>
                 <DatePicker
-                  label="Month/Year"
-                  views={["year", "month"]}
-                  value={scope2.month}
-                  onChange={val => handleDateChange('scope2', val)}
+                  label="Start Date"
+                  value={scope2.startDate}
+                  onChange={val => handleDateChange('scope2', 'startDate', val)}
+                  renderInput={params => <TextField {...params} fullWidth required />}
+                />
+              </LocalizationProvider>
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <LocalizationProvider dateAdapter={AdapterDateFns}>
+                <DatePicker
+                  label="End Date"
+                  value={scope2.endDate}
+                  onChange={val => handleDateChange('scope2', 'endDate', val)}
                   renderInput={params => <TextField {...params} fullWidth required />}
                 />
               </LocalizationProvider>
@@ -450,8 +535,8 @@ const GHGEmissionForm = ({ companyId, onSuccess, onError }) => {
       )}
       {/* Scope 3 */}
       {tab === 2 && (
-        <Box component="form" onSubmit={handleSubmit} sx={{ mt: 2 }}>
-          <Grid container spacing={2}>
+        <Box component="form" onSubmit={handleSubmit} sx={{ mt: 3, width: '100%' }}>
+          <Grid container spacing={3}>
             <Grid item xs={12} md={4}>
               <FormControl fullWidth required>
                 <InputLabel>Activity Type</InputLabel>
@@ -531,13 +616,22 @@ const GHGEmissionForm = ({ companyId, onSuccess, onError }) => {
                 InputProps={{ endAdornment: <span>kg CO₂e/(km·kg)</span> }}
               />
             </Grid>
-            <Grid item xs={12} md={3}>
+            <Grid item xs={12} md={6}>
               <LocalizationProvider dateAdapter={AdapterDateFns}>
                 <DatePicker
-                  label="Month/Year"
-                  views={["year", "month"]}
-                  value={scope3.month}
-                  onChange={val => handleDateChange('scope3', val)}
+                  label="Start Date"
+                  value={scope3.startDate}
+                  onChange={val => handleDateChange('scope3', 'startDate', val)}
+                  renderInput={params => <TextField {...params} fullWidth required />}
+                />
+              </LocalizationProvider>
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <LocalizationProvider dateAdapter={AdapterDateFns}>
+                <DatePicker
+                  label="End Date"
+                  value={scope3.endDate}
+                  onChange={val => handleDateChange('scope3', 'endDate', val)}
                   renderInput={params => <TextField {...params} fullWidth required />}
                 />
               </LocalizationProvider>
@@ -557,8 +651,8 @@ const GHGEmissionForm = ({ companyId, onSuccess, onError }) => {
       )}
       {/* Solvent */}
       {tab === 3 && (
-        <Box component="form" onSubmit={handleSubmit} sx={{ mt: 2 }}>
-          <Grid container spacing={2}>
+        <Box component="form" onSubmit={handleSubmit} sx={{ mt: 3, width: '100%' }}>
+          <Grid container spacing={3}>
             <Grid item xs={12} md={4}>
               <FormControl fullWidth required>
                 <InputLabel>Solvent Name</InputLabel>
@@ -596,13 +690,22 @@ const GHGEmissionForm = ({ companyId, onSuccess, onError }) => {
                 required
               />
             </Grid>
-            <Grid item xs={12} md={4}>
+            <Grid item xs={12} md={6}>
               <LocalizationProvider dateAdapter={AdapterDateFns}>
                 <DatePicker
-                  label="Month/Year"
-                  views={["year", "month"]}
-                  value={solvent.month}
-                  onChange={val => handleDateChange('solvent', val)}
+                  label="Start Date"
+                  value={solvent.startDate}
+                  onChange={val => handleDateChange('solvent', 'startDate', val)}
+                  renderInput={params => <TextField {...params} fullWidth required />}
+                />
+              </LocalizationProvider>
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <LocalizationProvider dateAdapter={AdapterDateFns}>
+                <DatePicker
+                  label="End Date"
+                  value={solvent.endDate}
+                  onChange={val => handleDateChange('solvent', 'endDate', val)}
                   renderInput={params => <TextField {...params} fullWidth required />}
                 />
               </LocalizationProvider>
@@ -622,8 +725,8 @@ const GHGEmissionForm = ({ companyId, onSuccess, onError }) => {
       )}
       {/* GHG Sinks */}
       {tab === 4 && (
-        <Box component="form" onSubmit={handleSubmit} sx={{ mt: 2 }}>
-          <Grid container spacing={2}>
+        <Box component="form" onSubmit={handleSubmit} sx={{ mt: 3, width: '100%' }}>
+          <Grid container spacing={3}>
             <Grid item xs={12} md={3}>
               <TextField
                 label="Tree Count (Nos)"
@@ -660,13 +763,22 @@ const GHGEmissionForm = ({ companyId, onSuccess, onError }) => {
                 </Select>
               </FormControl>
             </Grid>
-            <Grid item xs={12} md={3}>
+            <Grid item xs={12} md={6}>
               <LocalizationProvider dateAdapter={AdapterDateFns}>
                 <DatePicker
-                  label="Month/Year"
-                  views={["year", "month"]}
-                  value={sink.month}
-                  onChange={val => handleDateChange('sink', val)}
+                  label="Start Date"
+                  value={sink.startDate}
+                  onChange={val => handleDateChange('sink', 'startDate', val)}
+                  renderInput={params => <TextField {...params} fullWidth required />}
+                />
+              </LocalizationProvider>
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <LocalizationProvider dateAdapter={AdapterDateFns}>
+                <DatePicker
+                  label="End Date"
+                  value={sink.endDate}
+                  onChange={val => handleDateChange('sink', 'endDate', val)}
                   renderInput={params => <TextField {...params} fullWidth required />}
                 />
               </LocalizationProvider>

@@ -1,0 +1,5 @@
+Start Date,End Date,Category,Activity,Source,Quantity,Unit,Emission Factor,Emission Factor Unit,Calculation Method,Notes
+2025-01-01,2025-01-31,Purchased Electricity,Office Operations,Grid Electricity,5000,kWh,0.5,kg CO2e/kWh,Location-based Method,Sample data
+2025-01-01,2025-01-31,Purchased Heating,Office Heating,District Heating,2500,kWh,0.3,kg CO2e/kWh,Standard Calculation,Sample data
+2025-01-01,2025-01-31,Purchased Cooling,Office Cooling,District Cooling,1500,kWh,0.2,kg CO2e/kWh,Standard Calculation,Sample data
+2025-01-01,2025-01-31,Purchased Steam,Manufacturing,Steam Supply,3000,kg,0.15,kg CO2e/kg,Standard Calculation,Sample data

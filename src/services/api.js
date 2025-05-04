@@ -143,40 +143,162 @@ export const addUser = (data) => {
 };
 export const updateUser = (id, data) => api.put(`/api/users/${id}`, data);
 export const deleteUser = (id) => api.delete(`/api/users/${id}`);
+// Notification API functions
 export const getNotifications = () => api.get('/api/users/notifications');
-export const markNotificationRead = (id) => api.put(`/api/users/notifications/${id}/read`);
+export const markNotificationAsRead = (id) => api.put(`/api/users/notifications/${id}/read`);
+export const markAllNotificationsAsRead = () => api.put('/api/users/notifications/read-all');
 export const deleteNotification = (id) => api.delete(`/api/users/notifications/${id}`);
+export const getUnreadNotificationCount = () => api.get('/api/users/notifications/unread-count');
 export const deleteNotificationBySubmissionId = (submissionId) => api.delete(`/api/users/notifications/submission/${submissionId}`);
 
-// ESG API
-export const submitESGData = (data) => {
-  return api.post('/api/esg/submissions', data, {
-    timeout: 30000 // 30 second timeout
-  });
-};
-
-// ESG Submissions
-export const getESGSubmissions = () => {
-  return api.get('/api/esg/submissions');
-};
-
+// Chart Data API
 export const getChartData = () => {
   return api.get('/api/esg/chart-data');
 };
 
-export const reviewSubmission = (id, data) => api.put(`/api/esg/submissions/${id}/review`, data);
-export const getSubmissionById = (id) => api.get(`/api/esg/submissions/${id}`);
-export const getSubmissionHistory = () => api.get('/api/esg/submissions/history');
-
 // GHG Emissions API
-export const submitGHGEmissionData = (data) => {
-  return api.post('/api/ghg-emissions', data, {
-    timeout: 30000 // 30 second timeout
-  });
+export const submitGHGEmissionData = async (data) => {
+  try {
+    console.log('Submitting GHG emission data:', data);
+    const response = await api.post('/api/ghg-emissions', data, {
+      timeout: 15000, // 15 second timeout
+    });
+    console.log('GHG emission submission response:', response);
+    return response;
+  } catch (error) {
+    console.error('Error submitting GHG emission data:', error);
+    
+    // Provide more detailed error information
+    if (error.response) {
+      // The request was made and the server responded with a status code
+      // that falls out of the range of 2xx
+      console.error('Error response data:', error.response.data);
+      console.error('Error response status:', error.response.status);
+      console.error('Error response headers:', error.response.headers);
+      throw new Error(`Server error: ${error.response.status} ${error.response.statusText}`);
+    } else if (error.request) {
+      // The request was made but no response was received
+      console.error('Error request:', error.request);
+      throw new Error('No response received from server. Please check your network connection.');
+    } else {
+      // Something happened in setting up the request that triggered an Error
+      throw error;
+    }
+  }
+};
+
+// Social Data API
+export const submitSocialData = async (data) => {
+  try {
+    console.log('Submitting social data:', data);
+    const response = await api.post('/api/social-metrics', data, {
+      timeout: 15000, // 15 second timeout
+    });
+    console.log('Social data submission response:', response);
+    return response;
+  } catch (error) {
+    console.error('Error submitting social data:', error);
+    
+    // Provide more detailed error information
+    if (error.response) {
+      console.error('Error response data:', error.response.data);
+      console.error('Error response status:', error.response.status);
+      throw new Error(`Server error: ${error.response.status} ${error.response.statusText}`);
+    } else if (error.request) {
+      throw new Error('No response received from server. Please check your network connection.');
+    } else {
+      throw error;
+    }
+  }
+};
+
+// Governance Data API
+export const submitGovernanceData = async (data) => {
+  try {
+    console.log('Submitting governance data:', data);
+    const response = await api.post('/api/governance-metrics', data, {
+      timeout: 15000, // 15 second timeout
+    });
+    console.log('Governance data submission response:', response);
+    return response;
+  } catch (error) {
+    console.error('Error submitting governance data:', error);
+    
+    // Provide more detailed error information
+    if (error.response) {
+      console.error('Error response data:', error.response.data);
+      console.error('Error response status:', error.response.status);
+      throw new Error(`Server error: ${error.response.status} ${error.response.statusText}`);
+    } else if (error.request) {
+      throw new Error('No response received from server. Please check your network connection.');
+    } else {
+      throw error;
+    }
+  }
 };
 
 export const getGHGEmissionsByCompany = () => {
-  return api.get('/api/ghg-emissions/company/pending');
+  return api.get('/api/ghg-emissions/company');
+};
+
+export const getSocialMetricsByCompany = () => {
+  return api.get('/api/social-metrics/company');
+};
+
+export const getGovernanceMetricsByCompany = () => {
+  return api.get('/api/governance-metrics/company');
+};
+
+export const updateGHGEmissionStatus = (id, status) => {
+  return api.put(`/api/ghg-emissions/${id}/status`, { status });
+};
+
+export const updateSocialMetricStatus = (id, status) => {
+  return api.put(`/api/social-metrics/${id}/status`, { status });
+};
+
+export const updateGovernanceMetricStatus = (id, status) => {
+  return api.put(`/api/governance-metrics/${id}/status`, { status });
+};
+
+// History endpoints
+export const getGHGEmissionsHistory = () => {
+  return api.get('/api/ghg-emissions/history');
+};
+
+export const getSocialMetricsHistory = () => {
+  return api.get('/api/social-metrics/history');
+};
+
+export const getGovernanceMetricsHistory = () => {
+  return api.get('/api/governance-metrics/history');
+};
+
+// CSV Upload API
+export const uploadCSVFile = (formData) => {
+  return api.post('/api/ghg-emissions/upload-csv', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data'
+    },
+    timeout: 60000 // 60 second timeout for larger files
+  });
+};
+
+// Metric Category API
+export const getMetricCategories = (type) => {
+  return api.get(`/api/categories/${type}`);
+};
+
+export const getMetricCategoryByCode = (type, code) => {
+  return api.get(`/api/categories/${type}/${code}`);
+};
+
+export const createMetricCategory = (categoryData) => {
+  return api.post('/api/categories', categoryData);
+};
+
+export const initializeMetricCategories = () => {
+  return api.post('/api/categories/initialize');
 };
 
 export default api;
