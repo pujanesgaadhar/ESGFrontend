@@ -452,18 +452,41 @@ const ManagerDashboard = () => {
   return (
     <Box sx={{ 
       width: '100%',
-      maxWidth: '1200px',
-      margin: '0 auto'
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      ml: { xs: 0, sm: 0, md: '280px' }, // Account for the 280px sidebar on medium and larger screens
+      transition: 'all 0.3s ease',
+      boxSizing: 'border-box',
+      p: { xs: 1, sm: 2, md: 3 }, // Responsive padding
+      overflowX: 'hidden' // Prevent horizontal scrolling on small screens
     }}>
-      <Box sx={{ width: '100%', mb: 3 }}>
+      <Box sx={{ 
+        width: '100%', 
+        maxWidth: { xs: '100%', sm: '95%', md: '1200px' },
+        mb: { xs: 2, sm: 3 },
+        px: { xs: 1, sm: 0 } // Add padding on small screens, remove on larger screens
+      }}>
         <Tabs 
           value={mainTab} 
           onChange={handleMainTabChange}
+          variant="scrollable"
+          scrollButtons="auto"
+          allowScrollButtonsMobile
           sx={{ 
-            mb: 2,
-            '& .MuiTab-root': { fontWeight: 'bold' },
+            mb: { xs: 1, sm: 2 },
+            '& .MuiTab-root': { 
+              fontWeight: 'bold',
+              fontSize: { xs: '0.8rem', sm: '0.9rem', md: '1rem' },
+              minWidth: { xs: 'auto', sm: 100 },
+              p: { xs: 1, sm: 2 }
+            },
             '& .Mui-selected': { color: '#0A3D0A' },
-            '& .MuiTabs-indicator': { backgroundColor: '#0A3D0A' }
+            '& .MuiTabs-indicator': { backgroundColor: '#0A3D0A' },
+            '& .MuiTabs-scrollButtons': {
+              color: '#0A3D0A',
+              '&.Mui-disabled': { opacity: 0.3 }
+            }
           }}
         >
           <Tab 

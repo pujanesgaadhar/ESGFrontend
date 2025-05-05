@@ -279,11 +279,31 @@ export const getGovernanceMetricsHistory = () => {
 
 // CSV Upload API
 export const uploadCSVFile = (formData) => {
+  console.log('Uploading CSV file with formData:', {
+    scope: formData.get('scope'),
+    companyId: formData.get('companyId'),
+    fileName: formData.get('file')?.name,
+    fileSize: formData.get('file')?.size
+  });
+  
   return api.post('/api/ghg-emissions/upload-csv', formData, {
     headers: {
       'Content-Type': 'multipart/form-data'
     },
-    timeout: 60000 // 60 second timeout for larger files
+    timeout: 120000, // 120 second timeout for larger files
+    validateStatus: function (status) {
+      // Log all responses for debugging
+      console.log(`CSV upload response status: ${status}`);
+      return status >= 200 && status < 300; // Only resolve for 2xx status codes
+    }
+  }).catch(error => {
+    console.error('CSV upload error:', {
+      message: error.message,
+      status: error.response?.status,
+      statusText: error.response?.statusText,
+      data: error.response?.data
+    });
+    throw error;
   });
 };
 

@@ -189,19 +189,49 @@ const ManagerDashboardTable = ({
   const filteredData = getFilteredData();
 
   return (
-    <Paper elevation={3} sx={{ p: 3, mb: 4, width: '100%' }}>
-      <Typography variant="h5" sx={{ mb: 3, color: '#0A3D0A', fontWeight: 'bold' }}>
+    <Paper elevation={3} sx={{ 
+      p: { xs: 2, sm: 3 }, 
+      mb: { xs: 3, sm: 4 }, 
+      width: '100%',
+      maxWidth: { xs: '100%', sm: '100%', md: '1200px' },
+      mx: 'auto',
+      boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+      borderRadius: { xs: 1, sm: 2 },
+      overflow: 'hidden' // Prevent content overflow on small screens
+    }}>
+      <Typography 
+        variant="h5" 
+        sx={{ 
+          mb: { xs: 2, sm: 3 }, 
+          color: '#0A3D0A', 
+          fontWeight: 'bold',
+          fontSize: { xs: '1.2rem', sm: '1.5rem', md: '1.5rem' }
+        }}
+      >
         Pending {type.charAt(0).toUpperCase() + type.slice(1)} Submissions
       </Typography>
       
       <Tabs 
         value={selectedReviewTab} 
         onChange={handleTabChange}
+        variant="scrollable"
+        scrollButtons="auto"
+        allowScrollButtonsMobile
         sx={{ 
-          mb: 3,
-          '& .MuiTab-root': { fontWeight: 'bold' },
+          mb: { xs: 2, sm: 3 },
+          '& .MuiTab-root': { 
+            fontWeight: 'bold',
+            fontSize: { xs: '0.75rem', sm: '0.85rem', md: '0.9rem' },
+            minWidth: { xs: 'auto', sm: 80 },
+            p: { xs: '6px 8px', sm: '6px 16px' },
+            whiteSpace: { xs: 'normal', sm: 'nowrap' }
+          },
           '& .Mui-selected': { color: '#0A3D0A' },
-          '& .MuiTabs-indicator': { backgroundColor: '#0A3D0A' }
+          '& .MuiTabs-indicator': { backgroundColor: '#0A3D0A' },
+          '& .MuiTabs-scrollButtons': {
+            color: '#0A3D0A',
+            '&.Mui-disabled': { opacity: 0.3 }
+          }
         }}
       >
         {tabsConfig.map((tab, index) => (
@@ -230,8 +260,30 @@ const ManagerDashboardTable = ({
         ))}
       </Tabs>
       
-      <Box sx={{ overflowX: 'auto' }}>
-        <Table>
+      <Box sx={{ 
+        overflowX: 'auto',
+        '&::-webkit-scrollbar': {
+          height: '8px',
+        },
+        '&::-webkit-scrollbar-track': {
+          backgroundColor: '#f1f1f1',
+          borderRadius: '10px',
+        },
+        '&::-webkit-scrollbar-thumb': {
+          backgroundColor: '#9DC183',
+          borderRadius: '10px',
+        },
+        '&::-webkit-scrollbar-thumb:hover': {
+          backgroundColor: '#0A3D0A',
+        },
+      }}>
+        <Table size="small" sx={{
+          minWidth: { xs: 650, sm: 800, md: 1000 },
+          '& .MuiTableCell-root': {
+            p: { xs: '8px 6px', sm: '16px 8px', md: '16px' },
+            fontSize: { xs: '0.75rem', sm: '0.85rem', md: '0.9rem' }
+          }
+        }}>
           <TableHead>
             <TableRow sx={{ backgroundColor: '#f5f5f5' }}>
               <TableCell>Date</TableCell>
@@ -332,7 +384,18 @@ const ManagerDashboardTable = ({
                     )}
                     
                     <TableCell>
-                      <Box sx={{ display: 'flex', gap: 1 }}>
+                      <Box sx={{ 
+                        display: 'flex', 
+                        flexDirection: { xs: 'column', sm: 'row' },
+                        gap: { xs: 0.5, sm: 1 },
+                        '& .MuiButton-root': {
+                          minWidth: { xs: '60px', sm: 'auto' },
+                          fontSize: { xs: '0.7rem', sm: '0.75rem', md: '0.8rem' },
+                          whiteSpace: 'nowrap',
+                          textTransform: 'none',
+                          fontWeight: 'medium'
+                        }
+                      }}>
                         <Button 
                           variant="outlined" 
                           size="small"
@@ -346,7 +409,12 @@ const ManagerDashboardTable = ({
                           View
                         </Button>
                         {item.status === 'PENDING' && (
-                          <>
+                          <Box sx={{ 
+                            display: 'flex', 
+                            flexDirection: { xs: 'column', sm: 'row' },
+                            gap: { xs: 0.5, sm: 1 },
+                            mt: { xs: 0.5, sm: 0 }
+                          }}>
                             <Button 
                               variant="contained" 
                               size="small"
@@ -370,7 +438,7 @@ const ManagerDashboardTable = ({
                             >
                               Deny
                             </Button>
-                          </>
+                          </Box>
                         )}
                         {item.status !== 'PENDING' && (
                           <Chip 
@@ -391,9 +459,32 @@ const ManagerDashboardTable = ({
             ) : (
               <TableRow>
                 <TableCell colSpan={7} align="center">
-                  <Typography variant="body1" sx={{ py: 2 }}>
-                    No pending submissions found for this {type === 'environment' ? 'scope' : 'category'}.
-                  </Typography>
+                  <Box sx={{ 
+                    py: { xs: 3, sm: 4 },
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: 1
+                  }}>
+                    <Typography 
+                      variant="body1" 
+                      sx={{ 
+                        color: '#666',
+                        fontSize: { xs: '0.9rem', sm: '1rem' }
+                      }}
+                    >
+                      No pending submissions found for this {type === 'environment' ? 'scope' : 'category'}.
+                    </Typography>
+                    <Typography 
+                      variant="body2" 
+                      sx={{ 
+                        color: '#888',
+                        fontSize: { xs: '0.8rem', sm: '0.9rem' }
+                      }}
+                    >
+                      New submissions will appear here when representatives submit data.
+                    </Typography>
+                  </Box>
                 </TableCell>
               </TableRow>
             )}

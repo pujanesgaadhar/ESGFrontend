@@ -164,29 +164,17 @@ const PermanentNavigationRepresentative = () => {
           }}>
             <Box 
               component="img"
-              src="/images/esgaadhar-round-logo.svg"
+              src={`${process.env.PUBLIC_URL}/images/ESG Aadhar logo dark.svg`}
               alt="ESGAadhar Logo"
               sx={{ 
                 height: 48,
-                width: 48,
-                borderRadius: '50%',
                 backgroundColor: 'transparent',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
               }}
             />
-            <Typography 
-              variant="h5" 
-              component="div" 
-              sx={{ 
-                fontWeight: 'bold',
-                color: '#FFFFFF',
-                ml: 1,
-              }}
-            >
-              ESGAadhar
-            </Typography>
+            {/* Text element removed as requested */}
           </Box>
           
           {/* Right corner - Notifications and Profile */}

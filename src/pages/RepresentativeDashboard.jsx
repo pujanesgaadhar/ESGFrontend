@@ -210,6 +210,23 @@ const RepresentativeDashboard = ({ uploadView = false, historyView = false }) =>
     return unit ? `${formattedValue} ${unit}` : formattedValue;
   };
 
+  // Render metrics dashboard
+  const renderMetricsDashboard = () => {
+    return (
+      <Paper sx={{ 
+        p: 3, 
+        borderRadius: 2, 
+        backgroundColor: '#FFFFFF', 
+        width: '100%', 
+        boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+        textAlign: 'left',
+        ml: 0
+      }}>
+        <MetricsDashboard />
+      </Paper>
+    );
+  };
+
   // Render the submission form
   const renderSubmissionForm = () => {
     return (
@@ -218,9 +235,9 @@ const RepresentativeDashboard = ({ uploadView = false, historyView = false }) =>
         borderRadius: 2, 
         backgroundColor: '#FFFFFF', 
         width: '100%', 
-        maxWidth: '1200px',
         boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
-        mx: 'auto'
+        textAlign: 'left',
+        ml: 0
       }}>
         <Typography component="h2" variant="h6" gutterBottom sx={{ color: '#0A3D0A', fontWeight: 'bold' }}>
           ESG Data Submission
@@ -229,10 +246,23 @@ const RepresentativeDashboard = ({ uploadView = false, historyView = false }) =>
         <Tabs 
           value={environmentTab} 
           onChange={handleEnvironmentTabChange}
+          variant="scrollable"
+          scrollButtons="auto"
+          allowScrollButtonsMobile
           sx={{ 
-            mb: 3, 
+            mb: { xs: 2, sm: 3 },
+            '& .MuiTab-root': { 
+              fontWeight: 'medium',
+              fontSize: { xs: '0.85rem', sm: '0.9rem', md: '1rem' },
+              minWidth: { xs: 'auto', sm: 100 },
+              p: { xs: '6px 8px', sm: '6px 16px' }
+            },
             '& .MuiTabs-indicator': { backgroundColor: '#0A3D0A' },
-            '& .Mui-selected': { color: '#0A3D0A', fontWeight: 'bold' }
+            '& .Mui-selected': { color: '#0A3D0A', fontWeight: 'bold' },
+            '& .MuiTabs-scrollButtons': {
+              color: '#0A3D0A',
+              '&.Mui-disabled': { opacity: 0.3 }
+            }
           }}
         >
           <Tab label="Environment" sx={{ textTransform: 'none' }} />
@@ -289,9 +319,9 @@ const RepresentativeDashboard = ({ uploadView = false, historyView = false }) =>
         borderRadius: 2, 
         backgroundColor: '#FFFFFF', 
         width: '100%', 
-        maxWidth: '1200px',
         boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
-        mx: 'auto'
+        textAlign: 'left',
+        ml: 0
       }}>
         <Typography component="h2" variant="h6" gutterBottom sx={{ color: '#0A3D0A', fontWeight: 'bold', mb: 3 }}>
           Submission History
@@ -428,45 +458,51 @@ const RepresentativeDashboard = ({ uploadView = false, historyView = false }) =>
   // Render the dashboard view
   const renderDashboardView = () => {
     return (
-      <Box>
-        <Paper
-          sx={{
-            p: 3,
-            display: 'flex',
-            flexDirection: 'column',
-            backgroundColor: '#f5f5f5',
-            borderRadius: 1,
-            mb: 4
+      <Box sx={{ 
+        display: 'flex', 
+        flexDirection: 'column',
+        p: 3,
+        width: '100%',
+        maxWidth: '100%',
+        ml: 0
+      }}>
+        <Paper 
+          elevation={0} 
+          sx={{ 
+            borderBottom: 1, 
+            borderColor: 'divider',
+            backgroundColor: '#f5f9f5',
+            mb: 3,
+            borderRadius: '4px 4px 0 0',
+            textAlign: 'left'
           }}
         >
-          <Typography variant="h6" sx={{ mb: 2, color: '#0A3D0A', fontWeight: 'bold' }}>
-            Welcome to Your ESG Dashboard
-          </Typography>
-          <Typography variant="body1" paragraph>
-            This dashboard provides an overview of your company's environmental, social, and governance metrics.
-            Use the tabs below to submit new data or view your submission history.
-          </Typography>
-          
-          <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
-            <Tabs 
-              value={mainTab} 
-              onChange={handleMainTabChange}
-              sx={{ 
-                mb: 3, 
-                '& .MuiTabs-indicator': { backgroundColor: '#0A3D0A' },
-                '& .Mui-selected': { color: '#0A3D0A', fontWeight: 'bold' }
-              }}
-            >
-              <Tab label="Submit New Data" sx={{ textTransform: 'none' }} />
-              <Tab label="View History" sx={{ textTransform: 'none' }} />
-              <Tab label="Metrics Dashboard" sx={{ textTransform: 'none' }} />
-            </Tabs>
-          </Box>
-          
-          {mainTab === 0 && renderSubmissionForm()}
-          {mainTab === 1 && renderSubmissionHistory()}
-          {mainTab === 2 && <MetricsDashboard />}
+          <Tabs 
+            value={mainTab} 
+            onChange={handleMainTabChange}
+            sx={{ 
+              '& .MuiTab-root': { 
+                fontWeight: 'medium',
+                color: '#666',
+                '&.Mui-selected': {
+                  color: '#0A3D0A',
+                  fontWeight: 'bold'
+                }
+              },
+              '& .MuiTabs-indicator': {
+                backgroundColor: '#0A3D0A'
+              }
+            }}
+          >
+            <Tab label="Submit New Data" />
+            <Tab label="View History" />
+            <Tab label="Metrics Dashboard" />
+          </Tabs>
         </Paper>
+          
+        {mainTab === 0 && renderSubmissionForm()}
+        {mainTab === 1 && renderSubmissionHistory()}
+        {mainTab === 2 && renderMetricsDashboard()}
       </Box>
     );
   };
@@ -483,8 +519,28 @@ const RepresentativeDashboard = ({ uploadView = false, historyView = false }) =>
   };
 
   return (
-    <Box sx={{ p: 3 }}>
-      {renderContent()}
+    <Box sx={{ 
+      width: '100%',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'flex-start', // Left-align content
+      ml: '240px', // Account for the fixed sidebar width
+      transition: 'all 0.3s ease',
+      boxSizing: 'border-box',
+      p: { xs: 2, sm: 3 }, // Responsive padding
+      overflowX: 'hidden', // Prevent horizontal scrolling on small screens
+    }}>
+      <Box sx={{ 
+        width: '100%',
+        maxWidth: '1200px',
+        ml: 0, // Left-align instead of centering
+        mr: 'auto',
+        display: 'flex',
+        justifyContent: 'flex-start', // Left-align content
+        flexDirection: 'column'
+      }}>
+        {renderContent()}
+      </Box>
       
       <Snackbar
         open={snackbar.open}

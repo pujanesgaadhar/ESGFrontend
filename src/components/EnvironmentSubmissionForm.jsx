@@ -67,6 +67,7 @@ const EnvironmentSubmissionForm = ({ companyId, onSuccess, onError }) => {
         
         {activeTab === 1 && (
           <CSVUploader
+            companyId={companyId}
             onSuccess={onSuccess}
             onError={onError}
           />

@@ -14,6 +14,7 @@ import Navigation from './components/Navigation.jsx';
 import PermanentNavigation from './components/PermanentNavigation';
 import PermanentNavigationRepresentative from './components/PermanentNavigationRepresentative';
 import EmissionsChartDashboardWithZoom from './components/EmissionsChartDashboardWithZoom';
+import LogoTest from './components/LogoTest';
 
 function App() {
   return (
@@ -23,6 +24,7 @@ function App() {
         <Routes>
           <Route path="/" element={<Navigate to="/login" replace />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/logo-test" element={<LogoTest />} />
           <Route
             path="/admin/*"
             element={

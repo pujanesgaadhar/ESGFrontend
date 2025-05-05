@@ -90,7 +90,7 @@ const Login = () => {
           <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mb: 3 }}>
             <Box 
               component="img"
-              src="/images/esgaadhar-logo.svg"
+              src={`${process.env.PUBLIC_URL}/images/ESG Aadhar logo dark.svg`}
               alt="ESGAadhar Logo"
               sx={{ 
                 height: 100,

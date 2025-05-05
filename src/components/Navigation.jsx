@@ -143,12 +143,11 @@ const Navigation = () => {
           }}>
             <Box 
               component="img"
-              src="/images/esgaadhar-round-logo.svg"
+              src={`${process.env.PUBLIC_URL}/images/esg-aadhar-logo-main.svg`}
               alt="ESGAadhar Logo"
               sx={{ 
                 height: 48,
-                width: 48,
-                borderRadius: '50%',
+                mr: 1,
                 backgroundColor: 'transparent',
                 display: 'flex',
                 alignItems: 'center',
