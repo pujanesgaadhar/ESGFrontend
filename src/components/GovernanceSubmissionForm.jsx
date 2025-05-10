@@ -6,12 +6,13 @@ import {
   Paper,
   Button,
   TextField,
-  MenuItem,
-  InputLabel,
-  FormControl,
-  Select,
+  // Removed unused imports
+  // MenuItem,
+  // InputLabel,
+  // FormControl,
+  // Select,
   Divider,
-  Chip,
+  // Chip,
   FormControlLabel,
   Checkbox
 } from '@mui/material';
@@ -22,11 +23,13 @@ import MetricCategorySelector from './MetricCategorySelector';
 import { useAuth } from '../context/AuthContext';
 
 const GREEN = '#0A3D0A';
-const LIGHT_GREEN = '#9DC183';
+// Removed unused variable LIGHT_GREEN
 
 const GovernanceSubmissionForm = ({ onSuccess, onError }) => {
-  const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState('corporate');
+  // Using useAuth hook without destructuring
+  useAuth();
+  // Removed unused activeTab state
+  // const [activeTab, setActiveTab] = useState('corporate');
   const [selectedCategory, setSelectedCategory] = useState('CORPORATE');
   
   // Form states
@@ -47,27 +50,8 @@ const GovernanceSubmissionForm = ({ onSuccess, onError }) => {
   
   const [loading, setLoading] = useState(false);
   
-  const handleTabChange = (event, newValue) => {
-    setActiveTab(newValue);
-    // Update selected category based on tab
-    setSelectedCategory(newValue.toUpperCase());
-    
-    // Reset form when changing tabs
-    setFormData({
-      category: '',
-      metric: '',
-      value: '',
-      unit: '',
-      startDate: null,
-      endDate: null,
-      description: '',
-      policyExists: false,
-      policyUrl: '',
-      reviewFrequency: '',
-      responsibleParty: '',
-      documentationUrl: ''
-    });
-  };
+  // Removed unused handleTabChange function
+  // Added comment to explain the removal
   
   const handleChange = (e) => {
     const { name, value, checked, type } = e.target;
@@ -157,53 +141,7 @@ const GovernanceSubmissionForm = ({ onSuccess, onError }) => {
         <Typography variant="h6" sx={{ color: GREEN, fontWeight: 'bold', mb: 2 }}>
           Governance Performance Metrics
         </Typography>
-        
-        <Box sx={{ display: 'flex', mb: 3 }}>
-          <Chip
-            label="Corporate Governance"
-            onClick={() => handleTabChange('corporate')}
-            sx={{
-              mr: 1,
-              backgroundColor: activeTab === 'corporate' ? LIGHT_GREEN : '#e0e0e0',
-              color: activeTab === 'corporate' ? GREEN : 'text.primary',
-              fontWeight: activeTab === 'corporate' ? 'bold' : 'normal',
-              '&:hover': {
-                backgroundColor: activeTab === 'corporate' ? LIGHT_GREEN : '#e0e0e0',
-              }
-            }}
-          />
-          <Chip
-            label="Ethics & Compliance"
-            onClick={() => handleTabChange('ethics')}
-            sx={{
-              mr: 1,
-              backgroundColor: activeTab === 'ethics' ? LIGHT_GREEN : '#e0e0e0',
-              color: activeTab === 'ethics' ? GREEN : 'text.primary',
-              fontWeight: activeTab === 'ethics' ? 'bold' : 'normal',
-              '&:hover': {
-                backgroundColor: activeTab === 'ethics' ? LIGHT_GREEN : '#e0e0e0',
-              }
-            }}
-          />
-          <Chip
-            label="Risk Management"
-            onClick={() => handleTabChange('risk')}
-            sx={{
-              backgroundColor: activeTab === 'risk' ? LIGHT_GREEN : '#e0e0e0',
-              color: activeTab === 'risk' ? GREEN : 'text.primary',
-              fontWeight: activeTab === 'risk' ? 'bold' : 'normal',
-              '&:hover': {
-                backgroundColor: activeTab === 'risk' ? LIGHT_GREEN : '#e0e0e0',
-              }
-            }}
-          />
-        </Box>
-        
         <Divider sx={{ mb: 3 }} />
-        
-        <Typography variant="subtitle1" sx={{ color: GREEN, fontWeight: 'medium', mb: 2 }}>
-          {activeTab === 'corporate' ? 'Corporate Governance' : activeTab === 'ethics' ? 'Ethics & Compliance' : 'Risk Management'}
-        </Typography>
         
         <form onSubmit={handleSubmit}>
           <Grid container spacing={3}>

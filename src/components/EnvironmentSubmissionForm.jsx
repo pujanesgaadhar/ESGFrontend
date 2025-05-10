@@ -11,7 +11,7 @@ import GHGEmissionForm from './GHGEmissionForm';
 import CSVUploader from './CSVUploader';
 
 const GREEN = '#0A3D0A';
-const LIGHT_GREEN = '#9DC183';
+// Removed unused variable LIGHT_GREEN
 
 function a11yProps(index) {
   return {
@@ -28,7 +28,7 @@ const EnvironmentSubmissionForm = ({ companyId, onSuccess, onError }) => {
   };
 
   return (
-    <Box sx={{ width: '100%' }}>
+    <Box sx={{ width: '100%', maxWidth: '100%' }}>
       <Paper 
         elevation={0} 
         sx={{ 
@@ -45,10 +45,18 @@ const EnvironmentSubmissionForm = ({ companyId, onSuccess, onError }) => {
         <Tabs 
           value={activeTab} 
           onChange={handleTabChange}
+          variant="scrollable"
+          scrollButtons="auto"
+          allowScrollButtonsMobile
           sx={{ 
             mb: 3, 
+            width: '100%',
             '& .MuiTabs-indicator': { backgroundColor: GREEN },
-            '& .Mui-selected': { color: GREEN, fontWeight: 'bold' }
+            '& .Mui-selected': { color: GREEN, fontWeight: 'bold' },
+            '& .MuiTabs-scrollButtons': {
+              color: GREEN,
+              '&.Mui-disabled': { opacity: 0.3 }
+            }
           }}
         >
           <Tab label="Manual Entry" sx={{ textTransform: 'none' }} {...a11yProps(0)} />

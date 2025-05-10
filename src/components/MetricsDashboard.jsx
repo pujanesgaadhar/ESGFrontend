@@ -23,7 +23,7 @@ const GREEN_DARK = '#0A3D0A';
 const GREEN_LIGHT = '#9DC183';
 
 const MetricsDashboard = () => {
-  const { user } = useAuth();
+  useAuth(); // Using useAuth hook without destructuring the user variable
   const [activeTab, setActiveTab] = useState(0);
   const [loading, setLoading] = useState(true);
   const [metrics, setMetrics] = useState({

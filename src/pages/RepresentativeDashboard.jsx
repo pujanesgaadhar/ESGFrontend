@@ -1,15 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Box,
   Paper,
   Typography,
   Snackbar,
   Alert,
+  Grid,
+  Divider,
+  Fade,
   Tabs,
   Tab,
-  Card,
-  CardContent,
-  Divider,
   Table,
   TableBody,
   TableCell,
@@ -17,29 +17,43 @@ import {
   TableHead,
   TableRow,
   Chip,
-  CircularProgress,
   Button
 } from '@mui/material';
+import { keyframes } from '@mui/system';
+import { ESG_COLORS } from '../theme/esgTheme';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { getGHGEmissionsByCompany } from '../services/api';
+
+// Import our new components
+import ESGPerformanceMetrics from '../components/ESGPerformanceMetrics';
+import SustainabilityTips from '../components/SustainabilityTips';
+
+// Import form components
 import EnvironmentSubmissionForm from '../components/EnvironmentSubmissionForm';
 import SocialSubmissionForm from '../components/SocialSubmissionForm';
 import GovernanceSubmissionForm from '../components/GovernanceSubmissionForm';
-import MetricsDashboard from '../components/MetricsDashboard';
-import { getGHGEmissionsByCompany, getNotifications } from '../services/api';
+
+// Define animations
+const fadeIn = keyframes`
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+`;
 
 const RepresentativeDashboard = ({ uploadView = false, historyView = false }) => {
-  const [snackbar, setSnackbar] = useState({
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [notification, setNotification] = useState({
     open: false,
     message: '',
-    severity: 'info',
+    severity: 'success'
   });
-
-  const [companyId, setCompanyId] = useState(null);
-  const [mainTab, setMainTab] = useState(0);
+  
+  const [companyName, setCompanyName] = useState('');
   const [environmentTab, setEnvironmentTab] = useState(0);
   const [submissions, setSubmissions] = useState([]);
 
   // Function to fetch submission data
-  const fetchSubmissions = async () => {
+  const fetchSubmissions = useCallback(async () => {
     try {
       console.log('Fetching GHG emissions for representative...');
       const response = await getGHGEmissionsByCompany();
@@ -58,83 +72,32 @@ const RepresentativeDashboard = ({ uploadView = false, historyView = false }) =>
         `Failed to load submission history: ${error.response.status} ${error.response.statusText}` : 
         'Failed to load submission history: Network error';
       
-      setSnackbar({
+      setNotification({
         open: true,
         message: errorMessage,
-        severity: 'error',
+        severity: 'error'
       });
     }
-  };
-  
-  // Function to check for new notifications
-  const checkForNotifications = async () => {
-    try {
-      console.log('Checking for new notifications...');
-      const response = await getNotifications();
-      
-      // Check if there are any unread status update notifications
-      const statusUpdates = response.data.filter(notification => 
-        !notification.read && 
-        (notification.type === 'GHG_STATUS_UPDATE' || 
-         notification.type === 'SOCIAL_STATUS_UPDATE' || 
-         notification.type === 'GOVERNANCE_STATUS_UPDATE')
-      );
-      
-      if (statusUpdates.length > 0) {
-        // If there are unread status updates, show a notification
-        setSnackbar({
-          open: true,
-          message: 'You have new submission status updates! Check your notifications.',
-          severity: 'info',
-        });
-      }
-    } catch (error) {
-      console.error('Error checking for notifications:', error);
-    }
-  };
+  }, []);
 
   useEffect(() => {
+    // Get user data from local storage
     const user = JSON.parse(localStorage.getItem('user'));
-    if (user && user.company && user.company.id) {
-      setCompanyId(user.company.id);
-      // Set up polling for submission updates if we're in history view
-      let submissionPolling;
-      let notificationPolling;
+    if (user && user.company) {
+      setCompanyName(user.company.name || 'Your Company');
       
+      // If we're in history view, fetch the submissions
       if (historyView) {
-        // Initial fetch of submission history when component loads
         fetchSubmissions();
-        
-        // Poll for submission updates every 30 seconds
-        submissionPolling = setInterval(() => {
-          console.log('Refreshing submission history...');
-          fetchSubmissions();
-        }, 30000);
       }
       
-      // Check for notifications when component mounts
-      checkForNotifications();
-      
-      // Set up polling to check for new notifications every 15 seconds
-      notificationPolling = setInterval(() => {
-        checkForNotifications();
-      }, 15000);
-      
-      return () => {
-        if (submissionPolling) {
-          clearInterval(submissionPolling);
-        }
-        if (notificationPolling) {
-          clearInterval(notificationPolling);
-        }
-      };
+      // Check for initialTab in location state (for direct navigation to specific form tab)
+      if (uploadView && location.state?.initialTab !== undefined) {
+        setEnvironmentTab(location.state.initialTab);
+      }
     }
-  }, [historyView]);
+  }, [historyView, uploadView, location.state, fetchSubmissions]);
 
-  const handleMainTabChange = (event, newValue) => {
-    setMainTab(newValue);
-  };
-  
   const handleEnvironmentTabChange = (event, newValue) => {
     setEnvironmentTab(newValue);
   };
@@ -153,19 +116,16 @@ const RepresentativeDashboard = ({ uploadView = false, historyView = false }) =>
       message = 'ESG data submitted successfully!';
     }
     
-    setSnackbar({
+    setNotification({
       open: true,
       message: message,
-      severity: 'success',
+      severity: 'success'
     });
     
     // Refresh submission history after successful submission
     if (historyView) {
       fetchSubmissions();
     }
-    
-    // Check for notifications after successful submission
-    checkForNotifications();
   };
 
   const handleSubmissionError = (error, category) => {
@@ -180,88 +140,88 @@ const RepresentativeDashboard = ({ uploadView = false, historyView = false }) =>
       categoryDisplay = 'Governance';
     }
     
-    setSnackbar({
+    setNotification({
       open: true,
       message: `Error submitting ${categoryDisplay} data: ${error.message || 'Unknown error'}`,
-      severity: 'error',
+      severity: 'error'
     });
   };
 
-  const handleCloseSnackbar = () => {
-    setSnackbar(prev => ({ ...prev, open: false }));
+  const handleCloseNotification = (event, reason) => {
+    if (reason === 'clickaway') {
+      return;
+    }
+    setNotification(prev => ({ ...prev, open: false }));
   };
 
-  const handleCSVUploadSuccess = (response) => {
-    setSnackbar({
-      open: true,
-      message: `CSV data uploaded and processed successfully. ${response?.data?.recordsProcessed || 0} records submitted.`,
-      severity: 'success',
-    });
-  };
-
-  // Format emissions for display
-  const formatEmissions = (value, unit) => {
-    if (value === null || value === undefined) return 'N/A';
-    
-    // Format the number with commas for thousands
-    const formattedValue = new Intl.NumberFormat().format(value);
-    
-    // Add the unit if available
-    return unit ? `${formattedValue} ${unit}` : formattedValue;
-  };
-
-  // Render metrics dashboard
-  const renderMetricsDashboard = () => {
-    return (
-      <Paper sx={{ 
-        p: 3, 
-        borderRadius: 2, 
-        backgroundColor: '#FFFFFF', 
-        width: '100%', 
-        boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
-        textAlign: 'left',
-        ml: 0
-      }}>
-        <MetricsDashboard />
-      </Paper>
-    );
-  };
-
+  // Navigation handlers removed as Quick Actions panel is no longer needed
+  
   // Render the submission form
   const renderSubmissionForm = () => {
     return (
-      <Paper sx={{ 
-        p: 3, 
-        borderRadius: 2, 
-        backgroundColor: '#FFFFFF', 
-        width: '100%', 
-        boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+      <Box sx={{ 
+        width: '100%',
         textAlign: 'left',
-        ml: 0
+        animation: `${fadeIn} 0.5s ease-out`,
+        m: 0,
+        p: 0,
+        '& .MuiFormControl-root': {
+          width: '100%',
+          mb: 2,
+          ml: 0
+        },
+        '& .MuiInputBase-root': {
+          width: '100%',
+          ml: 0
+        },
+        '& .MuiGrid-root': {
+          ml: 0,
+          pl: 0
+        },
+        '& .MuiBox-root': {
+          ml: 0
+        }
       }}>
-        <Typography component="h2" variant="h6" gutterBottom sx={{ color: '#0A3D0A', fontWeight: 'bold' }}>
+        <Typography component="h2" variant="h6" gutterBottom sx={{ 
+          color: '#0A3D0A', 
+          fontWeight: 'bold', 
+          width: '100%',
+          borderBottom: '2px solid #9DC183',
+          paddingBottom: 1,
+          marginBottom: 3
+        }}>
           ESG Data Submission
         </Typography>
         
         <Tabs 
           value={environmentTab} 
           onChange={handleEnvironmentTabChange}
-          variant="scrollable"
-          scrollButtons="auto"
-          allowScrollButtonsMobile
+          variant="fullWidth"
+          scrollButtons={false}
           sx={{ 
-            mb: { xs: 2, sm: 3 },
+            mb: 3,
+            width: '100%',
+            ml: 0,
+            pl: 0,
             '& .MuiTab-root': { 
-              fontWeight: 'medium',
-              fontSize: { xs: '0.85rem', sm: '0.9rem', md: '1rem' },
-              minWidth: { xs: 'auto', sm: 100 },
-              p: { xs: '6px 8px', sm: '6px 16px' }
+              minHeight: 48,
+              fontWeight: 'bold',
+              fontSize: '1rem',
+              transition: 'all 0.3s ease',
+              '&:hover': {
+                backgroundColor: 'rgba(0, 0, 0, 0.04)',
+                transform: 'translateY(-2px)'
+              },
+              '&.Mui-selected': {
+                color: environmentTab === 0 ? '#4CAF50' : 
+                       environmentTab === 1 ? '#2196F3' : '#FFEB3B'
+              }
             },
-            '& .MuiTabs-indicator': { backgroundColor: '#0A3D0A' },
-            '& .Mui-selected': { color: '#0A3D0A', fontWeight: 'bold' },
-            '& .MuiTabs-scrollButtons': {
-              color: '#0A3D0A',
-              '&.Mui-disabled': { opacity: 0.3 }
+            '& .MuiTabs-indicator': {
+              backgroundColor: environmentTab === 0 ? '#4CAF50' : 
+                               environmentTab === 1 ? '#2196F3' : '#FFEB3B',
+              height: '3px',
+              borderRadius: '3px 3px 0 0'
             }
           }}
         >
@@ -270,290 +230,263 @@ const RepresentativeDashboard = ({ uploadView = false, historyView = false }) =>
           <Tab label="Governance" sx={{ textTransform: 'none' }} />
         </Tabs>
         
-        {environmentTab === 0 && (
-          <EnvironmentSubmissionForm 
-            companyId={companyId}
-            onSuccess={(response) => handleSubmissionSuccess(response, 'environment')}
-            onError={(error) => handleSubmissionError(error, 'environment')}
-          />
-        )}
-        
-        {environmentTab === 1 && (
-          <SocialSubmissionForm 
-            onSuccess={(response) => handleSubmissionSuccess(response, 'social')}
-            onError={(error) => handleSubmissionError(error, 'social')}
-          />
-        )}
-        
-        {environmentTab === 2 && (
-          <GovernanceSubmissionForm 
-            onSuccess={(response) => handleSubmissionSuccess(response, 'governance')}
-            onError={(error) => handleSubmissionError(error, 'governance')}
-          />
-        )}
-        
-        {!companyId && (
-          <Paper
-            sx={{
-              p: 2,
-              display: 'flex',
-              flexDirection: 'column',
-              backgroundColor: '#f5f5f5',
-              borderRadius: 1
-            }}
-          >
-            <Typography variant="h6" color="error">
-              Error: Company information not found. Please contact support.
-            </Typography>
-          </Paper>
-        )}
-      </Paper>
-    );
-  };
-
-  // Render submission history
-  const renderSubmissionHistory = () => {
-    return (
-      <Paper sx={{ 
-        p: 3, 
-        borderRadius: 2, 
-        backgroundColor: '#FFFFFF', 
-        width: '100%', 
-        boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
-        textAlign: 'left',
-        ml: 0
-      }}>
-        <Typography component="h2" variant="h6" gutterBottom sx={{ color: '#0A3D0A', fontWeight: 'bold', mb: 3 }}>
-          Submission History
-        </Typography>
-        
-        <Box sx={{ mb: 3 }}>
-          <Typography variant="subtitle2" sx={{ color: '#555', mb: 1 }}>
-            View all your GHG emissions submissions across all scopes
-          </Typography>
-        </Box>
-        
-        <TableContainer component={Paper} sx={{ mt: 2, boxShadow: 'none', border: '1px solid #e0e0e0', mb: 3 }}>
-          <Table>
-            <TableHead sx={{ backgroundColor: '#f5f5f5' }}>
-              <TableRow>
-                <TableCell sx={{ fontWeight: 'bold', color: '#0A3D0A', fontSize: '0.875rem' }}>Scope</TableCell>
-                <TableCell sx={{ fontWeight: 'bold', color: '#0A3D0A', fontSize: '0.875rem' }}>Source</TableCell>
-                <TableCell sx={{ fontWeight: 'bold', color: '#0A3D0A', fontSize: '0.875rem' }}>Date Range</TableCell>
-                <TableCell sx={{ fontWeight: 'bold', color: '#0A3D0A', fontSize: '0.875rem' }}>Emissions</TableCell>
-                <TableCell sx={{ fontWeight: 'bold', color: '#0A3D0A', fontSize: '0.875rem' }}>Submitted</TableCell>
-                <TableCell sx={{ fontWeight: 'bold', color: '#0A3D0A', fontSize: '0.875rem' }}>Status</TableCell>
-                <TableCell sx={{ fontWeight: 'bold', color: '#0A3D0A', fontSize: '0.875rem' }}>Comments</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {submissions.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={7} align="center" sx={{ py: 3 }}>
-                    <CircularProgress size={24} sx={{ mr: 2, color: '#9DC183' }} />
-                    <Typography variant="body2" color="textSecondary" display="inline">
-                      Loading submission history...
-                    </Typography>
-                  </TableCell>
-                </TableRow>
-              ) : (
-                submissions.map((submission) => (
-                  <TableRow 
-                    key={submission.id} 
-                    sx={{ 
-                      '&:hover': { backgroundColor: '#f0f7f0' },
-                      backgroundColor: submission.id % 2 === 0 ? '#fafafa' : 'white',
-                      transition: 'background-color 0.2s ease'
-                    }}
-                  >
-                    <TableCell>
-                      <Chip 
-                        label={submission.scope?.replace('SCOPE_', 'Scope ').replace('SOLVENT', 'Solvent').replace('SINK', 'Sink') || 'Unknown'} 
-                        size="small"
-                        sx={{
-                          backgroundColor: 
-                            submission.scope === 'SCOPE_1' ? '#E8F5E9' :
-                            submission.scope === 'SCOPE_2' ? '#E0F7FA' :
-                            submission.scope === 'SCOPE_3' ? '#F1F8E9' :
-                            submission.scope === 'SOLVENT' ? '#FFF8E1' :
-                            submission.scope === 'SINK' ? '#E0F2F1' : '#EEEEEE',
-                          color: 
-                            submission.scope === 'SCOPE_1' ? '#2E7D32' :
-                            submission.scope === 'SCOPE_2' ? '#0097A7' :
-                            submission.scope === 'SCOPE_3' ? '#558B2F' :
-                            submission.scope === 'SOLVENT' ? '#FF8F00' :
-                            submission.scope === 'SINK' ? '#00897B' : '#757575',
-                          fontWeight: 500,
-                          fontSize: '0.75rem'
-                        }}
-                      />
-                    </TableCell>
-                    <TableCell sx={{ fontSize: '0.875rem' }}>
-                      {submission.emissionSource}
-                    </TableCell>
-                    <TableCell sx={{ fontSize: '0.875rem' }}>
-                      {submission.startDate && submission.endDate ? 
-                        `${new Date(submission.startDate).toLocaleDateString()} - ${new Date(submission.endDate).toLocaleDateString()}` : 
-                        'N/A'
-                      }
-                    </TableCell>
-                    <TableCell sx={{ 
-                      fontSize: '0.875rem', 
-                      color: submission.totalEmissions < 0 ? '#2E7D32' : 'inherit',
-                      fontWeight: submission.totalEmissions < 0 ? 500 : 400
-                    }}>
-                      {formatEmissions(submission.totalEmissions, submission.units)}
-                    </TableCell>
-                    <TableCell sx={{ fontSize: '0.875rem' }}>
-                      {submission.submissionDate ? 
-                        new Date(submission.submissionDate).toLocaleDateString() : 
-                        (submission.submittedDate ? 
-                          new Date(submission.submittedDate).toLocaleDateString() : 
-                          'Not available')
-                      }
-                    </TableCell>
-                    <TableCell>
-                      <Chip 
-                        label={submission.status} 
-                        size="small"
-                        sx={{
-                          backgroundColor: 
-                            submission.status === 'PENDING' ? '#FFF3E0' :
-                            submission.status === 'APPROVED' ? '#E8F5E9' :
-                            submission.status === 'DENIED' ? '#FFEBEE' : '#EEEEEE',
-                          color: 
-                            submission.status === 'PENDING' ? '#E65100' :
-                            submission.status === 'APPROVED' ? '#2E7D32' :
-                            submission.status === 'DENIED' ? '#C62828' : '#757575',
-                          fontWeight: 500,
-                          fontSize: '0.75rem'
-                        }}
-                      />
-                    </TableCell>
-                    <TableCell sx={{ fontSize: '0.875rem', maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {submission.comments}
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </TableContainer>
-        
-        <Box sx={{ mt: 4, p: 2, backgroundColor: '#f5f5f5', borderRadius: 1 }}>
-          <Typography variant="subtitle2" sx={{ color: '#0A3D0A', fontWeight: 'bold', mb: 1 }}>
-            Understanding Your Submissions
-          </Typography>
-          <Typography variant="body2" paragraph>
-            • <strong>Scope 1:</strong> Direct emissions from owned or controlled sources
-          </Typography>
-          <Typography variant="body2" paragraph>
-            • <strong>Scope 2:</strong> Indirect emissions from purchased electricity, steam, heating, and cooling
-          </Typography>
-        </Box>
-      </Paper>
-    );
-  };
-
-  // Render the dashboard view
-  const renderDashboardView = () => {
-    return (
-      <Box sx={{ 
-        display: 'flex', 
-        flexDirection: 'column',
-        p: 3,
-        width: '100%',
-        maxWidth: '100%',
-        ml: 0
-      }}>
-        <Paper 
-          elevation={0} 
-          sx={{ 
-            borderBottom: 1, 
-            borderColor: 'divider',
-            backgroundColor: '#f5f9f5',
-            mb: 3,
-            borderRadius: '4px 4px 0 0',
-            textAlign: 'left'
-          }}
-        >
-          <Tabs 
-            value={mainTab} 
-            onChange={handleMainTabChange}
-            sx={{ 
-              '& .MuiTab-root': { 
-                fontWeight: 'medium',
-                color: '#666',
-                '&.Mui-selected': {
-                  color: '#0A3D0A',
-                  fontWeight: 'bold'
-                }
-              },
-              '& .MuiTabs-indicator': {
-                backgroundColor: '#0A3D0A'
-              }
-            }}
-          >
-            <Tab label="Submit New Data" />
-            <Tab label="View History" />
-            <Tab label="Metrics Dashboard" />
-          </Tabs>
-        </Paper>
+        <Box sx={{ p: 0, m: 0, width: '100%' }}>
+          {environmentTab === 0 && (
+            <EnvironmentSubmissionForm 
+              onSubmissionSuccess={(response) => handleSubmissionSuccess(response, 'environment')}
+              onSubmissionError={(error) => handleSubmissionError(error, 'environment')}
+              sx={{ ml: 0, pl: 0 }}
+            />
+          )}
           
-        {mainTab === 0 && renderSubmissionForm()}
-        {mainTab === 1 && renderSubmissionHistory()}
-        {mainTab === 2 && renderMetricsDashboard()}
+          {environmentTab === 1 && (
+            <SocialSubmissionForm 
+              onSubmissionSuccess={(response) => handleSubmissionSuccess(response, 'social')}
+              onSubmissionError={(error) => handleSubmissionError(error, 'social')}
+              sx={{ ml: 0, pl: 0 }}
+            />
+          )}
+          
+          {environmentTab === 2 && (
+            <GovernanceSubmissionForm 
+              onSubmissionSuccess={(response) => handleSubmissionSuccess(response, 'governance')}
+              onSubmissionError={(error) => handleSubmissionError(error, 'governance')}
+              sx={{ ml: 0, pl: 0 }}
+            />
+          )}
+        </Box>
       </Box>
     );
   };
 
-  // Render the appropriate view based on props
+  // Render the submission history
+  const renderSubmissionHistory = () => {
+    return (
+      <Box sx={{ 
+        width: '100%',
+        animation: `${fadeIn} 0.5s ease-out`
+      }}>
+        <Typography component="h2" variant="h6" gutterBottom sx={{ 
+          color: '#0A3D0A', 
+          fontWeight: 'bold', 
+          width: '100%',
+          borderBottom: '2px solid #9DC183',
+          paddingBottom: 1,
+          marginBottom: 3
+        }}>
+          Submission History
+        </Typography>
+        
+        {submissions.length > 0 ? (
+          <TableContainer component={Paper} sx={{ 
+            boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+            borderRadius: 2,
+            overflow: 'hidden'
+          }}>
+            <Table>
+              <TableHead>
+                <TableRow sx={{ backgroundColor: 'rgba(157, 193, 131, 0.1)' }}>
+                  <TableCell>Date</TableCell>
+                  <TableCell>Type</TableCell>
+                  <TableCell>Status</TableCell>
+                  <TableCell>Details</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {submissions.map((submission) => (
+                  <TableRow key={submission.id} sx={{
+                    '&:nth-of-type(odd)': { backgroundColor: 'rgba(0, 0, 0, 0.02)' },
+                    '&:hover': { backgroundColor: 'rgba(157, 193, 131, 0.05)' },
+                    transition: 'background-color 0.3s'
+                  }}>
+                    <TableCell>
+                      {new Date(submission.submissionDate).toLocaleDateString()}
+                    </TableCell>
+                    <TableCell>
+                      <Chip 
+                        label={submission.category || 'Environment'} 
+                        size="small"
+                        sx={{ 
+                          backgroundColor: submission.category === 'SOCIAL' ? 'rgba(33, 150, 243, 0.1)' : 
+                                         submission.category === 'GOVERNANCE' ? 'rgba(255, 235, 59, 0.2)' : 
+                                         'rgba(76, 175, 80, 0.1)',
+                          color: submission.category === 'SOCIAL' ? '#2196F3' : 
+                                 submission.category === 'GOVERNANCE' ? '#FFEB3B' : 
+                                 '#4CAF50',
+                          fontWeight: 'medium'
+                        }} 
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Chip 
+                        label={submission.status || 'Pending'} 
+                        size="small"
+                        sx={{ 
+                          backgroundColor: submission.status === 'APPROVED' ? 'rgba(76, 175, 80, 0.1)' : 
+                                         submission.status === 'REJECTED' ? 'rgba(244, 67, 54, 0.1)' : 
+                                         'rgba(255, 152, 0, 0.1)',
+                          color: submission.status === 'APPROVED' ? '#4CAF50' : 
+                                 submission.status === 'REJECTED' ? '#F44336' : 
+                                 '#FF9800',
+                          fontWeight: 'medium'
+                        }} 
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Button 
+                        variant="outlined" 
+                        size="small"
+                        sx={{ 
+                          borderColor: '#0A3D0A',
+                          color: '#0A3D0A',
+                          '&:hover': {
+                            borderColor: '#9DC183',
+                            backgroundColor: 'rgba(157, 193, 131, 0.1)'
+                          }
+                        }}
+                      >
+                        View Details
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        ) : (
+          <Paper sx={{ 
+            p: 3, 
+            textAlign: 'center',
+            borderRadius: 2,
+            backgroundColor: 'rgba(157, 193, 131, 0.05)',
+            border: '1px dashed rgba(157, 193, 131, 0.5)'
+          }}>
+            <Typography variant="body1" color="textSecondary">
+              No submission history found. Submit ESG data to see your history here.
+            </Typography>
+            <Button 
+              variant="contained" 
+              sx={{ 
+                mt: 2,
+                backgroundColor: '#0A3D0A',
+                '&:hover': {
+                  backgroundColor: '#0A3D0A',
+                  opacity: 0.9
+                }
+              }}
+              onClick={() => navigate('/representative/upload')}
+            >
+              Submit New Data
+            </Button>
+          </Paper>
+        )}
+      </Box>
+    );
+  };
+
+  // Render the appropriate content based on props
   const renderContent = () => {
     if (uploadView) {
       return renderSubmissionForm();
     } else if (historyView) {
       return renderSubmissionHistory();
     } else {
-      return renderDashboardView();
+      // Main dashboard view with our three new components
+      return (
+        <Fade in={true} timeout={800}>
+          <Box sx={{ width: '100%', maxWidth: '100%', px: 0 }}>
+            {/* Welcome header */}
+            <Box sx={{ mb: 4, textAlign: 'left', px: 2 }}>
+              <Typography variant="h4" sx={{ 
+                fontWeight: 'bold', 
+                color: ESG_COLORS.brand.dark,
+                mb: 1
+              }}>
+                Welcome to ESGAadhar, {companyName}
+              </Typography>
+              <Typography variant="subtitle1" sx={{ color: 'text.secondary' }}>
+                Your sustainability journey at a glance
+              </Typography>
+            </Box>
+            
+            {/* Main content grid - Full width layout */}
+            <Grid container spacing={0} sx={{ width: '100%', maxWidth: '100%', m: 0, p: 0 }}>
+              {/* ESG Performance Metrics - Full width on mobile, 2/3 width on desktop */}
+              <Grid item xs={12} lg={8} sx={{ width: '100%', p: 0 }}>
+                <Paper sx={{ 
+                  p: 3, 
+                  borderRadius: 0,
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                  animation: `${fadeIn} 0.5s ease-out`,
+                  animationDelay: '0.2s',
+                  animationFillMode: 'both',
+                  height: '100%',
+                  width: '100%',
+                  m: 0
+                }}>
+                  <Typography variant="h6" sx={{ 
+                    mb: 2, 
+                    fontWeight: 'bold',
+                    color: ESG_COLORS.brand.dark
+                  }}>
+                    ESG Performance Metrics
+                  </Typography>
+                  <Divider sx={{ mb: 3 }} />
+                  <ESGPerformanceMetrics />
+                </Paper>
+              </Grid>
+              
+              {/* Sustainability Tips - Now in right column on desktop */}
+              <Grid item xs={12} lg={4} sx={{ width: '100%', p: 0 }}>
+                <Paper sx={{ 
+                  p: 3, 
+                  borderRadius: 0,
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                  animation: `${fadeIn} 0.5s ease-out`,
+                  animationDelay: '0.3s',
+                  animationFillMode: 'both',
+                  height: '100%',
+                  width: '100%',
+                  m: 0
+                }}>
+                  <SustainabilityTips />
+                </Paper>
+              </Grid>
+            </Grid>
+          </Box>
+        </Fade>
+      );
     }
   };
 
   return (
     <Box sx={{ 
+      minHeight: 'calc(100vh - 64px)', // Subtract AppBar height
+      backgroundColor: '#f5f5f5',
+      pt: 3,
+      pl: 0, // Remove left padding to eliminate space between sidebar and content
+      pr: 0, // Remove right padding to fill the entire width
+      pb: 5,
       width: '100%',
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'flex-start', // Left-align content
-      ml: '240px', // Account for the fixed sidebar width
-      transition: 'all 0.3s ease',
-      boxSizing: 'border-box',
-      p: { xs: 2, sm: 3 }, // Responsive padding
-      overflowX: 'hidden', // Prevent horizontal scrolling on small screens
+      maxWidth: '100%',
+      overflow: 'hidden' // Prevent any potential overflow
     }}>
-      <Box sx={{ 
-        width: '100%',
-        maxWidth: '1200px',
-        ml: 0, // Left-align instead of centering
-        mr: 'auto',
-        display: 'flex',
-        justifyContent: 'flex-start', // Left-align content
-        flexDirection: 'column'
-      }}>
-        {renderContent()}
-      </Box>
+      {renderContent()}
       
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={6000}
-        onClose={handleCloseSnackbar}
+      {/* Notification snackbar */}
+      <Snackbar 
+        open={notification.open} 
+        autoHideDuration={6000} 
+        onClose={handleCloseNotification}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
       >
         <Alert 
-          onClose={handleCloseSnackbar} 
-          severity={snackbar.severity} 
+          onClose={handleCloseNotification} 
+          severity={notification.severity} 
+          variant="filled"
           sx={{ width: '100%' }}
         >
-          {snackbar.message}
+          {notification.message}
         </Alert>
       </Snackbar>
     </Box>

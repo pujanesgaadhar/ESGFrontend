@@ -1,8 +1,9 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { Box, CssBaseline, Typography } from '@mui/material';
+import { Box, CssBaseline, Typography, ThemeProvider } from '@mui/material';
 import { LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import esgTheme from './theme/esgTheme';
 import ProtectedRoute from './components/ProtectedRoute';
 import Login from './pages/Login';
 import AdminDashboard from './pages/AdminDashboard';
@@ -18,9 +19,10 @@ import LogoTest from './components/LogoTest';
 
 function App() {
   return (
-    <LocalizationProvider dateAdapter={AdapterDateFns}>
-      <Box sx={{ display: 'flex' }}>
-        <CssBaseline />
+    <ThemeProvider theme={esgTheme}>
+      <LocalizationProvider dateAdapter={AdapterDateFns}>
+        <Box sx={{ display: 'flex' }}>
+          <CssBaseline />
         <Routes>
           <Route path="/" element={<Navigate to="/login" replace />} />
           <Route path="/login" element={<Login />} />
@@ -60,8 +62,11 @@ function App() {
                     sx={{ 
                       flexGrow: 1, 
                       p: 3, 
-                      width: 'calc(100% - 280px)', 
-                      ml: '280px',
+                      width: '100%',
+                      transition: theme => theme.transitions.create(['width', 'margin-left'], {
+                        easing: theme.transitions.easing.sharp,
+                        duration: theme.transitions.duration.enteringScreen,
+                      }),
                       display: 'flex',
                       flexDirection: 'column',
                       pt: 10, // Increased padding top to prevent navbar overlap
@@ -93,8 +98,11 @@ function App() {
                   sx={{ 
                     flexGrow: 1, 
                     p: 3, 
-                    width: 'calc(100% - 280px)', 
-                    ml: '280px',
+                    width: '100%',
+                    transition: theme => theme.transitions.create(['width', 'margin-left'], {
+                      easing: theme.transitions.easing.sharp,
+                      duration: theme.transitions.duration.enteringScreen,
+                    }),
                     display: 'flex',
                     flexDirection: 'column',
                     pt: 10, // Increased padding top to prevent navbar overlap
@@ -131,8 +139,11 @@ function App() {
                   sx={{ 
                     flexGrow: 1, 
                     p: 3, 
-                    width: 'calc(100% - 280px)', 
-                    ml: '280px',
+                    width: '100%',
+                    transition: theme => theme.transitions.create(['width', 'margin-left'], {
+                      easing: theme.transitions.easing.sharp,
+                      duration: theme.transitions.duration.enteringScreen,
+                    }),
                     display: 'flex',
                     flexDirection: 'column',
                     pt: 10, // Increased padding top to prevent navbar overlap
@@ -173,25 +184,29 @@ function App() {
               <Box sx={{ display: 'flex', width: '100%' }}>
                 <PermanentNavigationRepresentative />
                 <Box 
+                  // 
                   component="main" 
-                  sx={{ 
-                    flexGrow: 1, 
-                    p: 3, 
-                    width: 'calc(100% - 280px)', 
-                    ml: '280px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    pt: 10, // Increased padding top to prevent navbar overlap
-                    mt: 0,
-                    '& > *': {
-                      maxWidth: '1200px',
+                    sx={{ 
+                      flexGrow: 1, 
+                      p: 3, 
                       width: '100%',
-                      marginLeft: 'auto',
-                      marginRight: 'auto'
+                      transition: theme => theme.transitions.create(['width', 'margin-left'], {
+                        easing: theme.transitions.easing.sharp,
+                        duration: theme.transitions.duration.enteringScreen,
+                      }),
+                      display: 'flex',
+                      flexDirection: 'column',
+                      pt: 10, // Increased padding top to prevent navbar overlap
+                      mt: 0,
+                      '& > *': {
+                        maxWidth: '1200px',
+                        width: '100%',
+                        marginLeft: 'auto',
+                        marginRight: 'auto'
                     }
                   }}
                 >
-                  <Box sx={{ width: '100%', maxWidth: '1200px', mb: 4 }}>
+                  <Box sx={{ width: '100%', maxWidth: '1200px', mb: 4, textAlign: 'center' }}>
                     <Typography variant="h4" sx={{ color: '#0A3D0A', mb: 2, fontWeight: 'bold' }}>
                       Representative Dashboard
                     </Typography>
@@ -280,8 +295,9 @@ function App() {
         />
 
         </Routes>
-      </Box>
-    </LocalizationProvider>
+        </Box>
+      </LocalizationProvider>
+    </ThemeProvider>
   );
 }
 

@@ -4,6 +4,9 @@ FROM node:18-alpine as build
 # Set working directory
 WORKDIR /app
 
+# Define build argument for environment
+ARG ENV=development
+
 # Copy package files
 COPY package*.json ./
 
@@ -12,6 +15,9 @@ RUN npm install
 
 # Copy project files
 COPY . .
+
+# Copy the appropriate environment variables file
+RUN cp .env.${ENV} .env
 
 # Build the app
 RUN npm run build

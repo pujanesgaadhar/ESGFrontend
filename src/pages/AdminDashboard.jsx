@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import {
   Box,
-  Container,
-  Grid,
+  // Container, // Removed unused import
+  // Grid, // Removed unused import
   Paper,
   Typography,
   Table,
@@ -13,7 +13,10 @@ import {
   Button,
   IconButton,
   Alert,
+  Tabs,
+  Tab
 } from '@mui/material';
+import { Business, Group } from '@mui/icons-material';
 
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddUserDialog from '../components/AddUserDialog';
@@ -26,6 +29,7 @@ const AdminDashboard = () => {
   const [error, setError] = useState('');
   const [addUserDialogOpen, setAddUserDialogOpen] = useState(false);
   const [addCompanyDialogOpen, setAddCompanyDialogOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState(0);
 
   const fetchCompanies = async () => {
     try {
@@ -139,60 +143,89 @@ const AdminDashboard = () => {
   };
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', width: '100%' }}>
-      <Container maxWidth="lg" sx={{ p: { xs: 2, sm: 3 }, height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-        {error && (
-          <Alert severity="error" sx={{ mb: 3, width: '100%' }}>
-            {error}
-            <Button color="inherit" size="small" onClick={fetchCompanies} sx={{ ml: 2 }}>
-              Retry
-            </Button>
-          </Alert>
-        )}
-        <Grid container spacing={3}>
-          {/* Companies Section */}
-          <Grid item xs={12} sx={{ width: '100%' }}>
-            <Paper 
-              elevation={2}
-              sx={{ 
-                p: { xs: 1, sm: 2, md: 3 }, 
-                display: 'flex', 
-                flexDirection: 'column',
-                borderRadius: 2,
-                overflow: 'hidden',
-                width: '100%',
-                maxWidth: '100%',
-                backgroundColor: '#FFFFFF',
-                border: '1px solid rgba(46, 125, 50, 0.1)',
-                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)'
-              }}
-            >
-              <Box sx={{ 
-                display: 'flex', 
-                flexDirection: { xs: 'column', sm: 'row' },
-                justifyContent: 'space-between', 
-                alignItems: { xs: 'flex-start', sm: 'center' },
-                mb: 2,
-                gap: 2
-              }}>
-                <Typography component="h2" variant="h6" gutterBottom sx={{ m: 0, color: 'primary.main', fontWeight: 'bold' }}>
-                  Companies
-                </Typography>
-                <Button 
-                  variant="contained" 
-                  onClick={() => setAddCompanyDialogOpen(true)}
-                  sx={{
-                    bgcolor: 'primary.main',
-                    color: 'white',
-                    '&:hover': {
-                      bgcolor: 'primary.dark',
-                    },
-                    textTransform: 'none',
-                  }}
-                >
-                  Add Company
-                </Button>
-              </Box>
+    <Box sx={{ 
+      display: 'flex',
+      minHeight: '100vh',
+      backgroundColor: '#f5f5f5'
+    }}>
+      {/* Left Sidebar Navigation */}
+      <Box sx={{
+        width: 240,
+        flexShrink: 0,
+        backgroundColor: '#fff',
+        borderRight: '1px solid rgba(0, 0, 0, 0.12)',
+        display: { xs: 'none', md: 'block' },
+        position: 'fixed',
+        height: '100vh',
+        left: 0,
+        top: 0,
+        overflowY: 'auto'
+      }}>
+        <Box sx={{ p: 3, borderBottom: '1px solid rgba(0, 0, 0, 0.12)' }}>
+          <Typography variant="h6" sx={{ color: '#0A3D0A', fontWeight: 600 }}>
+            Admin Dashboard
+          </Typography>
+        </Box>
+        
+        <Box sx={{ mt: 2 }}>
+          <Tabs
+            orientation="vertical"
+            value={activeTab}
+            onChange={(e, newValue) => setActiveTab(newValue)}
+            sx={{
+              '& .MuiTab-root': {
+                minHeight: 48,
+                justifyContent: 'flex-start',
+                textAlign: 'left',
+                pl: 3,
+                '&.Mui-selected': {
+                  color: '#0A3D0A',
+                  backgroundColor: 'rgba(10, 61, 10, 0.04)'
+                }
+              }
+            }}
+          >
+            <Tab 
+              label="Companies" 
+              icon={<Business sx={{ fontSize: 20 }} />}
+              iconPosition="start"
+            />
+            <Tab 
+              label="Users" 
+              icon={<Group sx={{ fontSize: 20 }} />}
+              iconPosition="start"
+            />
+          </Tabs>
+        </Box>
+      </Box>
+
+      {/* Main Content */}
+      <Box sx={{ 
+        flexGrow: 1,
+        ml: { xs: 0, md: '240px' },
+        p: 3,
+        transition: 'margin 225ms cubic-bezier(0.4, 0, 0.6, 1) 0ms'
+      }}>
+        <Paper sx={{ 
+          p: 3, 
+          borderRadius: 2,
+          minHeight: 'calc(100vh - 48px)',
+          backgroundColor: '#fff',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+        }}>
+          {/* Error Alert */}
+          {error && (
+            <Alert severity="error" sx={{ mb: 3, width: '100%' }}>
+              {error}
+              <Button color="inherit" size="small" onClick={fetchCompanies} sx={{ ml: 2 }}>
+                Retry
+              </Button>
+            </Alert>
+          )}
+
+          {/* Content Based on Selected Tab */}
+          <Box sx={{ maxWidth: 1200, mx: 'auto' }}>
+            {activeTab === 0 && (
               <Box sx={{ overflowX: 'auto', width: '100%' }}>
                 <Table size="small" sx={{ 
                   minWidth: { xs: 300, sm: 500, md: 650 },
@@ -265,51 +298,8 @@ const AdminDashboard = () => {
                   </TableBody>
                 </Table>
               </Box>
-            </Paper>
-          </Grid>
-
-          {/* Users Section */}
-          <Grid item xs={12} sx={{ width: '100%' }}>
-            <Paper
-              elevation={2}
-              sx={{
-                p: { xs: 1, sm: 2, md: 3 },
-                display: 'flex',
-                flexDirection: 'column',
-                borderRadius: 2,
-                overflow: 'hidden',
-                width: '100%',
-                maxWidth: '100%',
-                mt: 3
-              }}
-            >
-              <Box sx={{ 
-                display: 'flex', 
-                flexDirection: { xs: 'column', sm: 'row' },
-                justifyContent: 'space-between', 
-                alignItems: { xs: 'flex-start', sm: 'center' },
-                mb: 2,
-                gap: 2
-              }}>
-                <Typography component="h2" variant="h6" gutterBottom sx={{ m: 0, color: 'primary.main', fontWeight: 'bold' }}>
-                  Users
-                </Typography>
-                <Button 
-                  variant="contained" 
-                  onClick={() => setAddUserDialogOpen(true)}
-                  sx={{ 
-                    bgcolor: 'primary.main',
-                    color: 'white',
-                    '&:hover': {
-                      bgcolor: 'primary.dark',
-                    },
-                    textTransform: 'none',
-                    whiteSpace: 'nowrap'
-                  }}
-                >
-                  Add User
-                </Button>
-              </Box>
+            )}
+            {activeTab === 1 && (
               <Box sx={{ overflowX: 'auto', width: '100%' }}>
                 <Table size="small" sx={{ 
                   minWidth: { xs: 300, sm: 500, md: 650 },
@@ -397,12 +387,12 @@ const AdminDashboard = () => {
                   </TableBody>
                 </Table>
               </Box>
-            </Paper>
-          </Grid>
-        </Grid>
-      </Container>
-      {/* Error is now only shown at the top */}
+            )}
+          </Box>
+        </Paper>
+      </Box>
 
+      {/* Existing Dialogs */}
       <AddCompanyDialog
         open={addCompanyDialogOpen}
         onClose={() => setAddCompanyDialogOpen(false)}

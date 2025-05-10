@@ -16,7 +16,9 @@ import {
   DialogActions,
   TextField,
   Alert,
-  Chip,
+  // Chip, // Removed unused import
+  IconButton,
+  Grid,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { getPendingSubmissions, reviewSubmission, deleteNotificationBySubmissionId, getSubmissionById } from '../services/api';

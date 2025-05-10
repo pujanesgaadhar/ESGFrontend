@@ -27,7 +27,9 @@ import LogoutIcon from '@mui/icons-material/Logout';
 import PersonIcon from '@mui/icons-material/Person';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import ClearIcon from '@mui/icons-material/Clear';
-// Removed unused DeleteOutlineIcon import
+// Using direct image import instead of component
+// Import ESG colors from theme
+import { ESG_COLORS } from '../theme/esgTheme';
 
 const Navigation = () => {
   const { user, logout } = useAuth();
@@ -119,6 +121,11 @@ const Navigation = () => {
           zIndex: (theme) => theme.zIndex.drawer + 1,
           width: '100%',
           left: 0,
+          background: ESG_COLORS.navbar.background.white,
+          borderBottom: `1px solid ${ESG_COLORS.navbar.border}`,
+          boxShadow: '0 2px 10px rgba(0, 0, 0, 0.05)',
+          transition: 'all 0.3s ease',
+          color: ESG_COLORS.navbar.text.primary
         }}
       >
         <Toolbar sx={{ px: 0, width: '100%', display: 'flex', position: 'relative', height: 64 }}>
@@ -143,7 +150,7 @@ const Navigation = () => {
           }}>
             <Box 
               component="img"
-              src={`${process.env.PUBLIC_URL}/images/esg-aadhar-logo-main.svg`}
+              src="/images/ESG Aadhar logo.svg"
               alt="ESGAadhar Logo"
               sx={{ 
                 height: 48,
@@ -152,6 +159,11 @@ const Navigation = () => {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
+                filter: 'drop-shadow(0 2px 5px rgba(0,0,0,0.1))', // Lighter shadow for better visibility on light background
+                transition: 'all 0.3s ease',
+                '&:hover': {
+                  transform: 'scale(1.05)'
+                }
               }}
             />
             <Typography 

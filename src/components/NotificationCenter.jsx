@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Box,
   Typography,
@@ -11,17 +12,37 @@ import {
   Divider,
   Button,
   CircularProgress,
-  Paper
+  Paper,
+  Fade,
+  Zoom,
+  Tooltip
 } from '@mui/material';
+import { keyframes } from '@mui/system';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import DeleteIcon from '@mui/icons-material/Delete';
 import MarkEmailReadIcon from '@mui/icons-material/MarkEmailRead';
 import { getNotifications, markNotificationAsRead, deleteNotification } from '../services/api';
 
-// ESGAadhar green color scheme
-const GREEN_DARK = '#0A3D0A';
-const GREEN_LIGHT = '#9DC183';
+// Import ESG colors from theme
+import { ESG_COLORS } from '../theme/esgTheme';
+
+// Define animations
+const fadeIn = keyframes`
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+`;
+
+const pulse = keyframes`
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+`;
+
+const slideIn = keyframes`
+  from { transform: translateX(20px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+`;
 
 /**
  * NotificationCenter component for displaying and managing user notifications
@@ -29,6 +50,7 @@ const GREEN_LIGHT = '#9DC183';
  * @param {Function} props.onNotificationUpdate - Callback when notifications are updated
  */
 const NotificationCenter = ({ onNotificationUpdate }) => {
+  const navigate = useNavigate();
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(false);
   const [anchorEl, setAnchorEl] = useState(null);
@@ -48,6 +70,23 @@ const NotificationCenter = ({ onNotificationUpdate }) => {
     
     return () => clearInterval(interval);
   }, []);
+  
+  // Effect for badge animation when unread count changes
+  useEffect(() => {
+    if (unreadCount > 0) {
+      const badge = document.querySelector('.MuiBadge-badge');
+      if (badge) {
+        badge.style.animation = `${pulse} 1s ease-in-out`;
+        const animationEndHandler = () => {
+          badge.style.animation = '';
+        };
+        badge.addEventListener('animationend', animationEndHandler);
+        return () => {
+          badge.removeEventListener('animationend', animationEndHandler);
+        };
+      }
+    }
+  }, [unreadCount]);
 
   // Fetch notifications from the API
   const fetchNotifications = async () => {
@@ -202,18 +241,34 @@ const NotificationCenter = ({ onNotificationUpdate }) => {
 
   return (
     <>
-      <IconButton
-        aria-describedby={id}
-        onClick={handleClick}
-        sx={{ 
-          color: GREEN_DARK,
-          '&:hover': { backgroundColor: 'rgba(10, 61, 10, 0.08)' }
-        }}
-      >
-        <Badge badgeContent={unreadCount} color="error">
-          <NotificationsIcon />
-        </Badge>
-      </IconButton>
+      <Tooltip title="Notifications">
+        <IconButton
+          aria-describedby={id}
+          onClick={handleClick}
+          color="inherit"
+          size="large"
+          sx={{
+            transition: 'all 0.2s ease',
+            '&:hover': {
+              transform: 'scale(1.1)',
+              backgroundColor: 'rgba(255, 255, 255, 0.1)'
+            }
+          }}
+        >
+          <Badge 
+            badgeContent={unreadCount} 
+            sx={{
+              '& .MuiBadge-badge': {
+                backgroundColor: unreadCount > 0 ? ESG_COLORS.social : 'grey.500',
+                transition: 'all 0.3s ease',
+                fontWeight: 'bold'
+              }
+            }}
+          >
+            <NotificationsIcon />
+          </Badge>
+        </IconButton>
+      </Tooltip>
       
       <Popover
         id={id}
@@ -228,15 +283,22 @@ const NotificationCenter = ({ onNotificationUpdate }) => {
           vertical: 'top',
           horizontal: 'right',
         }}
+        TransitionComponent={Fade}
+        transitionDuration={300}
         PaperProps={{
-          sx: { 
-            width: 400, 
+          sx: {
+            width: 350,
             maxHeight: 500,
-            boxShadow: '0 4px 20px rgba(0,0,0,0.15)'
+            overflow: 'hidden',
+            mt: 1,
+            boxShadow: '0 8px 24px rgba(0, 0, 0, 0.15)',
+            borderRadius: 2,
+            border: `1px solid ${ESG_COLORS.brand.light}`,
+            animation: `${fadeIn} 0.3s ease-out`
           }
         }}
       >
-        <Box sx={{ p: 2, backgroundColor: GREEN_DARK, color: 'white' }}>
+        <Box sx={{ p: 2, backgroundColor: ESG_COLORS.brand.dark, color: 'white' }}>
           <Typography variant="h6" component="div" sx={{ fontWeight: 'medium' }}>
             Notifications
           </Typography>
@@ -245,26 +307,51 @@ const NotificationCenter = ({ onNotificationUpdate }) => {
           </Typography>
         </Box>
         
-        <Box sx={{ display: 'flex', justifyContent: 'flex-end', p: 1, backgroundColor: '#f5f5f5' }}>
-          <Button 
-            startIcon={<MarkEmailReadIcon />}
-            onClick={handleMarkAllAsRead}
-            disabled={unreadCount === 0}
-            sx={{ 
-              color: GREEN_DARK,
-              '&:hover': { backgroundColor: 'rgba(10, 61, 10, 0.08)' },
-              '&.Mui-disabled': { color: 'rgba(10, 61, 10, 0.38)' }
-            }}
-          >
-            Mark all as read
-          </Button>
+        <Box sx={{ 
+          p: 2, 
+          borderBottom: '1px solid rgba(0, 0, 0, 0.12)', 
+          display: 'flex', 
+          justifyContent: 'space-between', 
+          alignItems: 'center',
+          background: `linear-gradient(135deg, ${ESG_COLORS.brand.dark} 0%, #1a5e1a 100%)`,
+        }}>
+          <Typography variant="h6" sx={{ 
+            fontWeight: 600, 
+            color: '#ffffff',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1
+          }}>
+            <NotificationsIcon fontSize="small" />
+            Notifications
+          </Typography>
+          {notifications.length > 0 && (
+            <Zoom in={true} timeout={400}>
+              <Button
+                startIcon={<MarkEmailReadIcon />}
+                size="small"
+                onClick={handleMarkAllAsRead}
+                sx={{ 
+                  textTransform: 'none',
+                  backgroundColor: 'rgba(255, 255, 255, 0.15)',
+                  color: '#ffffff',
+                  '&:hover': {
+                    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+                  },
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                Mark all as read
+              </Button>
+            </Zoom>
+          )}
         </Box>
         
         <Divider />
         
         {loading ? (
           <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', p: 4 }}>
-            <CircularProgress size={40} sx={{ color: GREEN_DARK }} />
+            <CircularProgress size={40} sx={{ color: ESG_COLORS.brand.dark }} />
           </Box>
         ) : notifications.length === 0 ? (
           <Box sx={{ p: 3, textAlign: 'center' }}>
@@ -280,50 +367,198 @@ const NotificationCenter = ({ onNotificationUpdate }) => {
                 elevation={0}
                 sx={{ 
                   mb: 0.5,
-                  borderLeft: notification.read ? 'none' : `4px solid ${GREEN_LIGHT}`,
-                  backgroundColor: notification.read ? 'white' : '#f9fbf9'
+                  borderLeft: notification.read ? 'none' : `4px solid ${getNotificationColor(notification)}`,
+                  backgroundColor: notification.read ? 'white' : `rgba(${getNotificationColorRgb(notification)}, 0.08)`
                 }}
               >
                 <ListItem
-                  alignItems="flex-start"
+                  key={notification.id}
+                  onClick={() => {
+                    // Handle redirection to submission review if submission ID exists
+                    if (notification.submissionId && notification.type) {
+                      // Store the submission ID in localStorage to highlight it on the dashboard
+                      localStorage.setItem('highlightSubmissionId', notification.submissionId.toString());
+                      
+                      // Determine which main tab to select based on notification type
+                      let mainTabIndex = 0; // Default to environment tab
+                      if (notification.type.toLowerCase().includes('social')) {
+                        mainTabIndex = 1;
+                      } else if (notification.type.toLowerCase().includes('governance')) {
+                        mainTabIndex = 2;
+                      }
+                      
+                      // Store the main tab index to select
+                      localStorage.setItem('selectedMainTab', mainTabIndex.toString());
+                      
+                      // Determine which sub-tab to select based on the submission type
+                      let subTabIndex = 0; // Default to first tab
+                      
+                      if (notification.type.toLowerCase().includes('environment') || notification.type.toLowerCase().includes('ghg')) {
+                        // For environment/GHG submissions
+                        if (notification.message.toLowerCase().includes('scope 1')) {
+                          subTabIndex = 0;
+                        } else if (notification.message.toLowerCase().includes('scope 2')) {
+                          subTabIndex = 1;
+                        } else if (notification.message.toLowerCase().includes('scope 3')) {
+                          subTabIndex = 2;
+                        } else if (notification.message.toLowerCase().includes('solvent')) {
+                          subTabIndex = 3;
+                        } else if (notification.message.toLowerCase().includes('sink')) {
+                          subTabIndex = 4;
+                        }
+                      } else if (notification.type.toLowerCase().includes('social')) {
+                        // For social submissions
+                        if (notification.message.toLowerCase().includes('employee')) {
+                          subTabIndex = 0;
+                        } else if (notification.message.toLowerCase().includes('community')) {
+                          subTabIndex = 1;
+                        } else if (notification.message.toLowerCase().includes('supply chain')) {
+                          subTabIndex = 2;
+                        }
+                      } else if (notification.type.toLowerCase().includes('governance')) {
+                        // For governance submissions
+                        if (notification.message.toLowerCase().includes('corporate')) {
+                          subTabIndex = 0;
+                        } else if (notification.message.toLowerCase().includes('ethics')) {
+                          subTabIndex = 1;
+                        } else if (notification.message.toLowerCase().includes('risk')) {
+                          subTabIndex = 2;
+                        }
+                      }
+                      
+                      // Store the sub-tab index to select
+                      localStorage.setItem('selectedSubTab', subTabIndex.toString());
+                      
+                      // Mark notification as read if it's not already read
+                      if (!notification.read) {
+                        handleMarkAsRead(notification.id);
+                      }
+                      
+                      // Navigate to manager dashboard
+                      navigate('/manager-dashboard');
+                      
+                      // Close the notification popover
+                      handleClose();
+                    }
+                  }}
+                  sx={{
+                    cursor: notification.submissionId ? 'pointer' : 'default',
+                    py: 1.5,
+                    px: 2,
+                    pr: 8, // Added from the second sx prop
+                    borderLeft: notification.read ? 'none' : `4px solid ${getNotificationColor(notification)}`,
+                    backgroundColor: notification.read ? 'transparent' : `rgba(${getNotificationColorRgb(notification)}, 0.08)`,
+                    '&:hover': {
+                      backgroundColor: notification.read ? 'rgba(0, 0, 0, 0.04)' : `rgba(${getNotificationColorRgb(notification)}, 0.12)`
+                    },
+                    transition: 'all 0.2s ease',
+                    animation: `${slideIn} 0.3s ease-out`,
+                    position: 'relative',
+                    overflow: 'hidden',
+                    '&::after': notification.read ? {} : {
+                      content: '""',
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      width: '100%',
+                      height: '100%',
+                      background: `linear-gradient(90deg, rgba(${getNotificationColorRgb(notification)}, 0.05) 0%, rgba(${getNotificationColorRgb(notification)}, 0) 100%)`,
+                      pointerEvents: 'none'
+                    }
+                  }}
                   secondaryAction={
-                    <Box>
+                    <Box sx={{ display: 'flex' }}>
                       {!notification.read && (
-                        <IconButton 
-                          edge="end" 
-                          aria-label="mark as read"
-                          onClick={() => handleMarkAsRead(notification.id)}
-                          sx={{ mr: 1 }}
-                        >
-                          <MarkEmailReadIcon fontSize="small" />
-                        </IconButton>
+                        <Tooltip title="Mark as read">
+                          <IconButton
+                            edge="end"
+                            aria-label="mark as read"
+                            onClick={() => handleMarkAsRead(notification.id)}
+                            size="small"
+                            sx={{ 
+                              mr: 0.5,
+                              color: getNotificationColor(notification),
+                              '&:hover': {
+                                backgroundColor: `rgba(${getNotificationColorRgb(notification)}, 0.1)`
+                              },
+                              transition: 'all 0.2s ease'
+                            }}
+                          >
+                            <CheckCircleIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
                       )}
-                      <IconButton 
-                        edge="end" 
-                        aria-label="delete"
-                        onClick={() => handleDelete(notification.id)}
-                      >
-                        <DeleteIcon fontSize="small" />
-                      </IconButton>
+                      <Tooltip title="Delete notification">
+                        <IconButton
+                          edge="end"
+                          aria-label="delete"
+                          onClick={() => handleDelete(notification.id)}
+                          size="small"
+                          sx={{ 
+                            '&:hover': {
+                              color: '#f44336',
+                              backgroundColor: 'rgba(244, 67, 54, 0.1)'
+                            },
+                            transition: 'all 0.2s ease'
+                          }}
+                        >
+                          <DeleteIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
                     </Box>
                   }
-                  sx={{ pr: 8 }}
                 >
                   <ListItemText
                     primary={
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                         {getNotificationIcon(notification.type, notification.status)}
-                        <Typography variant="subtitle2" sx={{ fontWeight: notification.read ? 'regular' : 'medium' }}>
-                          {getNotificationTypeDisplay(notification.type)}
-                        </Typography>
+                        <Tooltip title={getNotificationTypeDisplay(notification.type)}>
+                          <Typography 
+                            variant="subtitle2" 
+                            sx={{ 
+                              fontWeight: notification.read ? 'normal' : 'bold', 
+                              color: notification.read ? 'text.primary' : getNotificationColor(notification),
+                              transition: 'color 0.2s ease'
+                            }}
+                          >
+                            {notification.title}
+                          </Typography>
+                        </Tooltip>
                       </Box>
                     }
                     secondary={
-                      <Box>
-                        <Typography variant="body2" sx={{ color: 'text.primary', mt: 0.5 }}>
+                      <Box component="span" sx={{ display: 'block' }}>
+                        <Typography 
+                          variant="body2" 
+                          component="span" 
+                          sx={{ 
+                            display: 'block', 
+                            color: 'text.primary', 
+                            mb: 0.5,
+                            fontWeight: notification.read ? 'normal' : 500
+                          }}
+                        >
                           {notification.message}
                         </Typography>
-                        <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', mt: 0.5 }}>
+                        <Typography 
+                          variant="caption" 
+                          component="span" 
+                          sx={{ 
+                            display: 'flex', 
+                            alignItems: 'center',
+                            gap: 0.5 
+                          }} 
+                          color="text.secondary"
+                        >
+                          <Box 
+                            sx={{ 
+                              width: 8, 
+                              height: 8, 
+                              borderRadius: '50%', 
+                              backgroundColor: notification.read ? 'text.disabled' : getNotificationColor(notification),
+                              transition: 'background-color 0.2s ease'
+                            }} 
+                          />
                           {formatDate(notification.createdAt)}
                         </Typography>
                       </Box>
@@ -338,6 +573,38 @@ const NotificationCenter = ({ onNotificationUpdate }) => {
       </Popover>
     </>
   );
+};
+
+// Helper function to determine notification color based on content
+const getNotificationColor = (notification) => {
+  const title = notification.title?.toLowerCase() || '';
+  const message = notification.message?.toLowerCase() || '';
+  
+  if (title.includes('environment') || message.includes('environment') || 
+      title.includes('emission') || message.includes('emission') ||
+      title.includes('ghg') || message.includes('ghg')) {
+    return ESG_COLORS.environment;
+  } else if (title.includes('social') || message.includes('social') ||
+             title.includes('employee') || message.includes('employee') ||
+             title.includes('community') || message.includes('community')) {
+    return ESG_COLORS.social;
+  } else if (title.includes('governance') || message.includes('governance') ||
+             title.includes('compliance') || message.includes('compliance') ||
+             title.includes('policy') || message.includes('policy')) {
+    return ESG_COLORS.governance;
+  }
+  
+  return ESG_COLORS.brand.dark; // Default color
+};
+
+// Helper function to convert hex to rgb for rgba usage
+const getNotificationColorRgb = (notification) => {
+  const color = getNotificationColor(notification);
+  // Simple hex to rgb conversion
+  const r = parseInt(color.slice(1, 3), 16);
+  const g = parseInt(color.slice(3, 5), 16);
+  const b = parseInt(color.slice(5, 7), 16);
+  return `${r}, ${g}, ${b}`;
 };
 
 export default NotificationCenter;

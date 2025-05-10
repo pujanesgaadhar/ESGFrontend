@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Line, Pie, Bar } from 'react-chartjs-2';
-import { Box, Typography, Grid, Paper, ToggleButton, ToggleButtonGroup, useTheme } from '@mui/material';
+import { Box, Typography, Grid, Paper, useTheme } from '@mui/material';
+// Removed unused ToggleButton and ToggleButtonGroup imports
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -30,7 +31,8 @@ ChartJS.register(
 const ESGDataChart = () => {
   const theme = useTheme();
   const [chartData, setChartData] = useState(null);
-  const [selectedTimeframe, setSelectedTimeframe] = useState('all');
+  // Removed unused state variables
+  // const [selectedTimeframe, setSelectedTimeframe] = useState('all');
   const [latestScores, setLatestScores] = useState(null);
 
   useEffect(() => {
@@ -83,7 +85,8 @@ const ESGDataChart = () => {
     };
 
     fetchChartData();
-  }, []);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Adding theme.palette dependencies would cause unnecessary re-renders
 
   const commonOptions = {
     responsive: true,

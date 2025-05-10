@@ -90,11 +90,15 @@ const Login = () => {
           <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mb: 3 }}>
             <Box 
               component="img"
-              src={`${process.env.PUBLIC_URL}/images/ESG Aadhar logo dark.svg`}
+              src="/images/ESG Aadhar logo.svg"
               alt="ESGAadhar Logo"
               sx={{ 
                 height: 100,
-                mb: 2
+                width: 'auto',
+                maxWidth: '100%',
+                mb: 2,
+                filter: 'drop-shadow(0 2px 5px rgba(0,0,0,0.1))', // Lighter shadow for better visibility
+                transition: 'all 0.3s ease'
               }}
             />
           </Box>

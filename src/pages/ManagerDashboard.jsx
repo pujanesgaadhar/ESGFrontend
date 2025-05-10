@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import {
   Box,
+  Paper,
+  // Typography, // Removed unused import
   Snackbar,
   Alert,
   Tabs,
-  Tab,
-  Typography
+  Tab
 } from '@mui/material';
+import { Assessment, BusinessCenter, AccountBalance } from '@mui/icons-material';
 import SubmissionDetailsDialog from '../components/SubmissionDetailsDialog';
 import ManagerDashboardTable from '../components/ManagerDashboardTable';
 import { 
@@ -21,6 +23,7 @@ import {
   getGovernanceMetricsHistory
 } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+// Removed unused import ESG_COLORS
 
 const ManagerDashboard = () => {
   // Dialog state for viewing submission details
@@ -36,10 +39,8 @@ const ManagerDashboard = () => {
   const [socialMetrics, setSocialMetrics] = useState([]);
   const [governanceMetrics, setGovernanceMetrics] = useState([]);
   
-  // History states
-  const [ghgEmissionsHistory, setGhgEmissionsHistory] = useState([]);
-  const [socialMetricsHistory, setSocialMetricsHistory] = useState([]);
-  const [governanceMetricsHistory, setGovernanceMetricsHistory] = useState([]);
+  // Removed unused history states
+  // These states were not being used in the component
   
   // Tab states for each category
   const [selectedReviewTab, setSelectedReviewTab] = useState(0);
@@ -77,7 +78,36 @@ const ManagerDashboard = () => {
       polling = setInterval(() => fetchAllMetrics(), 30000);
     }
     return () => polling && clearInterval(polling);
-  }, [user]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]); // Adding fetchAllMetrics as a dependency would cause infinite re-renders
+  
+  // Check localStorage for tab selection from notification click
+  useEffect(() => {
+    // Check if we have a main tab selection from notification
+    const selectedMainTab = localStorage.getItem('selectedMainTab');
+    if (selectedMainTab !== null) {
+      setMainTab(parseInt(selectedMainTab));
+      localStorage.removeItem('selectedMainTab');
+    }
+    
+    // Check if we have a sub-tab selection from notification
+    const selectedSubTab = localStorage.getItem('selectedSubTab');
+    if (selectedSubTab !== null) {
+      const subTabIndex = parseInt(selectedSubTab);
+      
+      // Set the appropriate sub-tab based on the main tab
+      if (selectedMainTab === '0' || mainTab === 0) {
+        setSelectedReviewTab(subTabIndex);
+      } else if (selectedMainTab === '1' || mainTab === 1) {
+        setSelectedSocialTab(subTabIndex);
+      } else if (selectedMainTab === '2' || mainTab === 2) {
+        setSelectedGovernanceTab(subTabIndex);
+      }
+      
+      localStorage.removeItem('selectedSubTab');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);  // Adding mainTab as a dependency would cause unnecessary re-renders
   
   const fetchAllMetrics = () => {
     fetchGhgEmissions();
@@ -344,7 +374,7 @@ const ManagerDashboard = () => {
 
   useEffect(() => {
     let filtered = [...ghgEmissions];
-    
+
     // Apply scope filter based on selected tab
     if (selectedReviewTab === 0) {
       filtered = filtered.filter(e => e.scope === 'SCOPE_1');
@@ -451,174 +481,145 @@ const ManagerDashboard = () => {
 
   return (
     <Box sx={{ 
-      width: '100%',
       display: 'flex',
       flexDirection: 'column',
-      alignItems: 'center',
-      ml: { xs: 0, sm: 0, md: '280px' }, // Account for the 280px sidebar on medium and larger screens
-      transition: 'all 0.3s ease',
-      boxSizing: 'border-box',
-      p: { xs: 1, sm: 2, md: 3 }, // Responsive padding
-      overflowX: 'hidden' // Prevent horizontal scrolling on small screens
+      minHeight: '100vh',
+      backgroundColor: '#f5f5f5',
+      width: '100%'
     }}>
+      {/* Main Category Tabs */}
       <Box sx={{ 
         width: '100%', 
-        maxWidth: { xs: '100%', sm: '95%', md: '1200px' },
-        mb: { xs: 2, sm: 3 },
-        px: { xs: 1, sm: 0 } // Add padding on small screens, remove on larger screens
+        mb: 3,
+        borderBottom: '1px solid rgba(0, 0, 0, 0.12)'
       }}>
-        <Tabs 
-          value={mainTab} 
+        <Tabs
+          value={mainTab}
           onChange={handleMainTabChange}
-          variant="scrollable"
-          scrollButtons="auto"
-          allowScrollButtonsMobile
-          sx={{ 
-            mb: { xs: 1, sm: 2 },
-            '& .MuiTab-root': { 
+          variant="fullWidth"
+          scrollButtons={false}
+          sx={{
+            '& .MuiTab-root': {
+              minHeight: 48,
               fontWeight: 'bold',
-              fontSize: { xs: '0.8rem', sm: '0.9rem', md: '1rem' },
-              minWidth: { xs: 'auto', sm: 100 },
-              p: { xs: 1, sm: 2 }
+              fontSize: '1rem',
+              transition: 'all 0.3s ease',
+              '&:hover': {
+                backgroundColor: 'rgba(0, 0, 0, 0.04)',
+                transform: 'translateY(-2px)'
+              },
+              '&.Mui-selected': {
+                color: mainTab === 0 ? '#4CAF50' : 
+                       mainTab === 1 ? '#2196F3' : 
+                       mainTab === 2 ? '#FFEB3B' : '#0A3D0A'
+              }
             },
-            '& .Mui-selected': { color: '#0A3D0A' },
-            '& .MuiTabs-indicator': { backgroundColor: '#0A3D0A' },
-            '& .MuiTabs-scrollButtons': {
-              color: '#0A3D0A',
-              '&.Mui-disabled': { opacity: 0.3 }
+            '& .MuiTabs-indicator': {
+              backgroundColor: mainTab === 0 ? '#4CAF50' : 
+                              mainTab === 1 ? '#2196F3' : 
+                              mainTab === 2 ? '#FFEB3B' : '#0A3D0A',
+              height: '3px',
+              borderRadius: '3px 3px 0 0'
             }
           }}
         >
           <Tab 
-            label={<Box sx={{ display: 'flex', alignItems: 'center' }}>
-              <Typography>Environment</Typography>
-              {(pendingCounts.scope1 + pendingCounts.scope2 + pendingCounts.scope3 + pendingCounts.solvent + pendingCounts.sink) > 0 && (
-                <Box sx={{ 
-                  ml: 1, 
-                  bgcolor: '#0A3D0A', 
-                  color: 'white', 
-                  borderRadius: '50%', 
-                  width: 20, 
-                  height: 20, 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  justifyContent: 'center',
-                  fontSize: '0.75rem'
-                }}>
-                  {pendingCounts.scope1 + pendingCounts.scope2 + pendingCounts.scope3 + pendingCounts.solvent + pendingCounts.sink}
-                </Box>
-              )}
-            </Box>} 
+            label="Environment"
+            icon={<Assessment sx={{ fontSize: 20 }} />}
+            iconPosition="start"
           />
           <Tab 
-            label={<Box sx={{ display: 'flex', alignItems: 'center' }}>
-              <Typography>Social</Typography>
-              {(pendingCounts.employee + pendingCounts.community + pendingCounts.supplyChain) > 0 && (
-                <Box sx={{ 
-                  ml: 1, 
-                  bgcolor: '#0A3D0A', 
-                  color: 'white', 
-                  borderRadius: '50%', 
-                  width: 20, 
-                  height: 20, 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  justifyContent: 'center',
-                  fontSize: '0.75rem'
-                }}>
-                  {pendingCounts.employee + pendingCounts.community + pendingCounts.supplyChain}
-                </Box>
-              )}
-            </Box>} 
+            label="Social"
+            icon={<BusinessCenter sx={{ fontSize: 20 }} />}
+            iconPosition="start"
           />
           <Tab 
-            label={<Box sx={{ display: 'flex', alignItems: 'center' }}>
-              <Typography>Governance</Typography>
-              {(pendingCounts.corporate + pendingCounts.ethics + pendingCounts.risk) > 0 && (
-                <Box sx={{ 
-                  ml: 1, 
-                  bgcolor: '#0A3D0A', 
-                  color: 'white', 
-                  borderRadius: '50%', 
-                  width: 20, 
-                  height: 20, 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  justifyContent: 'center',
-                  fontSize: '0.75rem'
-                }}>
-                  {pendingCounts.corporate + pendingCounts.ethics + pendingCounts.risk}
-                </Box>
-              )}
-            </Box>} 
+            label="Governance"
+            icon={<AccountBalance sx={{ fontSize: 20 }} />}
+            iconPosition="start"
           />
         </Tabs>
-        
-        {/* Environment Tab */}
-        {mainTab === 0 && (
-          <ManagerDashboardTable
-            ghgEmissions={ghgEmissions}
-            selectedReviewTab={selectedReviewTab}
-            handleTabChange={(e, newValue) => setSelectedReviewTab(newValue)}
-            pendingCounts={pendingCounts}
-            handleViewDetails={handleViewDetails}
-            handleApproveSubmission={(id) => handleApproveSubmission(id, 'environment')}
-            handleDenySubmission={(id) => handleDenySubmission(id, 'environment')}
-            type="environment"
-          />
-        )}
-        
-        {/* Social Tab */}
-        {mainTab === 1 && (
-          <ManagerDashboardTable
-            socialMetrics={socialMetrics}
-            selectedReviewTab={selectedSocialTab}
-            handleTabChange={(e, newValue) => setSelectedSocialTab(newValue)}
-            pendingCounts={pendingCounts}
-            handleViewDetails={handleViewDetails}
-            handleApproveSubmission={(id) => handleApproveSubmission(id, 'social')}
-            handleDenySubmission={(id) => handleDenySubmission(id, 'social')}
-            type="social"
-          />
-        )}
-        
-        {/* Governance Tab */}
-        {mainTab === 2 && (
-          <ManagerDashboardTable
-            governanceMetrics={governanceMetrics}
-            selectedReviewTab={selectedGovernanceTab}
-            handleTabChange={(e, newValue) => setSelectedGovernanceTab(newValue)}
-            pendingCounts={pendingCounts}
-            handleViewDetails={handleViewDetails}
-            handleApproveSubmission={(id) => handleApproveSubmission(id, 'governance')}
-            handleDenySubmission={(id) => handleDenySubmission(id, 'governance')}
-            type="governance"
-          />
-        )}
-        
-        <SubmissionDetailsDialog
-          open={detailsDialogOpen}
-          onClose={() => setDetailsDialogOpen(false)}
-          submission={selectedSubmission}
-        />
-        <Snackbar
-          open={notification.open}
-          autoHideDuration={3000}
-          onClose={handleCloseNotification}
-          anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-        >
-          <Alert
-            onClose={handleCloseNotification}
-            severity={notification.severity}
-            variant="filled"
-            sx={{ backgroundColor: notification.severity === 'success' ? '#0A3D0A' : '', color: notification.severity === 'success' ? '#fff' : '' }}
-          >
-            {notification.message}
-          </Alert>
-        </Snackbar>
       </Box>
+
+      {/* Main Content */}
+      <Box sx={{ 
+        flexGrow: 1,
+        width: '100%',
+        p: 3,
+        transition: 'all 225ms cubic-bezier(0.4, 0, 0.6, 1) 0ms'
+      }}>
+        <Paper sx={{ 
+          p: 3, 
+          borderRadius: 2,
+          minHeight: 'calc(100vh - 48px)',
+          backgroundColor: '#fff',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+        }}>
+          {/* Content Based on Selected Tab */}
+          <Box sx={{ maxWidth: 1200, mx: 'auto' }}>
+            {mainTab === 0 && (
+              <ManagerDashboardTable
+                ghgEmissions={ghgEmissions}
+                selectedReviewTab={selectedReviewTab}
+                handleTabChange={(e, newValue) => setSelectedReviewTab(newValue)}
+                pendingCounts={pendingCounts}
+                handleViewDetails={handleViewDetails}
+                handleApproveSubmission={(id) => handleApproveSubmission(id, 'environment')}
+                handleDenySubmission={(id) => handleDenySubmission(id, 'environment')}
+                type="environment"
+              />
+            )}
+            {mainTab === 1 && (
+              <ManagerDashboardTable
+                socialMetrics={socialMetrics}
+                selectedReviewTab={selectedSocialTab}
+                handleTabChange={(e, newValue) => setSelectedSocialTab(newValue)}
+                pendingCounts={pendingCounts}
+                handleViewDetails={handleViewDetails}
+                handleApproveSubmission={(id) => handleApproveSubmission(id, 'social')}
+                handleDenySubmission={(id) => handleDenySubmission(id, 'social')}
+                type="social"
+              />
+            )}
+            {mainTab === 2 && (
+              <ManagerDashboardTable
+                governanceMetrics={governanceMetrics}
+                selectedReviewTab={selectedGovernanceTab}
+                handleTabChange={(e, newValue) => setSelectedGovernanceTab(newValue)}
+                pendingCounts={pendingCounts}
+                handleViewDetails={handleViewDetails}
+                handleApproveSubmission={(id) => handleApproveSubmission(id, 'governance')}
+                handleDenySubmission={(id) => handleDenySubmission(id, 'governance')}
+                type="governance"
+              />
+            )}
+          </Box>
+        </Paper>
+      </Box>
+
+      {/* Dialogs and Notifications */}
+      <SubmissionDetailsDialog
+        open={detailsDialogOpen}
+        onClose={() => setDetailsDialogOpen(false)}
+        submission={selectedSubmission}
+      />
+      <Snackbar
+        open={notification.open}
+        autoHideDuration={3000}
+        onClose={handleCloseNotification}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+      >
+        <Alert
+          onClose={handleCloseNotification}
+          severity={notification.severity}
+          variant="filled"
+          sx={{ backgroundColor: notification.severity === 'success' ? '#0A3D0A' : '', color: notification.severity === 'success' ? '#fff' : '' }}
+        >
+          {notification.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
-}
+};
 
 export default ManagerDashboard;

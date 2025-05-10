@@ -51,7 +51,7 @@ export const AuthProvider = ({ children }) => {
       
       console.log('AuthContext: Login response received:', response.data);
       
-      const { token, user: userData, role: responseRole } = response.data;
+      const { token, user: userData } = response.data; // Removed unused responseRole variable
       
       // Make sure we have a valid user object for storage
       if (!userData || !userData.role) {

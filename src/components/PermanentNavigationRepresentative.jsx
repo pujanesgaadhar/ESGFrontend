@@ -2,19 +2,26 @@ import React, { useState, useEffect } from 'react';
 import { 
   AppBar, 
   Toolbar, 
-  Typography, 
+  Typography,
   Box, 
   Drawer, 
   List, 
+  ListItem,
   ListItemIcon, 
   ListItemText, 
   ListItemButton,
   Menu,
   MenuItem,
-  Badge,
   Divider,
-  IconButton
+  IconButton,
+  useMediaQuery,
+  useTheme,
+  Tooltip,
+  Badge,
+  Popover,
+  Button
 } from '@mui/material';
+import { keyframes } from '@mui/system';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { getNotifications, markNotificationAsRead, deleteNotification } from '../services/api';
@@ -24,13 +31,26 @@ import HistoryIcon from '@mui/icons-material/History';
 import LogoutIcon from '@mui/icons-material/Logout';
 import PersonIcon from '@mui/icons-material/Person';
 import NotificationsIcon from '@mui/icons-material/Notifications';
+import MenuIcon from '@mui/icons-material/Menu';
+// Using direct image import instead of component
+// Import ESG colors from theme
+import { ESG_COLORS } from '../theme/esgTheme';
 
-const PermanentNavigationRepresentative = () => {
+// Define animations
+const slideIn = keyframes`
+  from { transform: translateX(-20px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+`;
+
+const PermanentNavigationRepresentative = ({ children }) => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [anchorEl, setAnchorEl] = useState(null);
   const open = Boolean(anchorEl);
+  const [drawerOpen, setDrawerOpen] = useState(true);
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   
   // State for notifications
   const [notifications, setNotifications] = useState([]);
@@ -59,62 +79,63 @@ const PermanentNavigationRepresentative = () => {
     setNotificationAnchorEl(null);
   };
   
-  // Handle clicking on a notification item
+  // Handle notification item click - simplified for the new UI
   const handleNotificationItemClick = (notification) => {
-    // Close the menu
+    // Mark notification as read if not already read
+    if (!notification.read) {
+      markNotificationAsRead(notification.id)
+        .then(() => {
+          // Update local state
+          setNotifications(prev => 
+            prev.map(n => 
+              n.id === notification.id ? { ...n, read: true } : n
+            )
+          );
+        })
+        .catch(error => console.error('Error marking notification as read:', error));
+    }
+    
+    // Close the notification menu
     handleNotificationMenuClose();
-    // Navigate or perform action based on notification type if needed
-    console.log('Notification clicked:', notification);
   };
   
-  // This function will be implemented in a future update
-  // when we add the mark as read functionality to the UI
-  
-  
-  // Delete a notification
+  // Function to delete a notification
   const handleDeleteNotification = async (notificationId, event) => {
     if (event) {
-      event.stopPropagation(); // Prevent triggering the parent MenuItem onClick
+      event.stopPropagation();
     }
     try {
       await deleteNotification(notificationId);
-      // Update the notifications list
-      fetchNotifications();
+      setNotifications(prev => prev.filter(n => n.id !== notificationId));
+      console.log(`Notification ${notificationId} deleted successfully`);
     } catch (error) {
       console.error('Error deleting notification:', error);
     }
   };
   
-  // Mark all notifications as read
-  const handleMarkAllAsRead = async () => {
-    try {
-      // Create an array of promises for marking each notification as read
-      const markPromises = notifications
-        .filter(notification => !notification.read)
-        .map(notification => markNotificationAsRead(notification.id));
-      
-      // Wait for all promises to resolve
-      await Promise.all(markPromises);
-      
-      // Update the notifications list
-      fetchNotifications();
-    } catch (error) {
-      console.error('Error marking all notifications as read:', error);
-    }
-  };
-  
   // Load notifications when component mounts (only for non-admin users)
   useEffect(() => {
-    if (user && user.role && user.role.toLowerCase() !== 'admin') {
+    if (user && user.role?.toLowerCase() !== 'admin') {
       fetchNotifications();
-      
-      // Set up polling for notifications
-      const interval = setInterval(fetchNotifications, 60000); // Poll every minute
-      
-      return () => clearInterval(interval);
     }
   }, [user]);
-  
+
+  // Set drawer state based on screen size
+  useEffect(() => {
+    // Set initial drawer state based on screen size
+    setDrawerOpen(!isMobile);
+    
+    // Handle window resize
+    const handleResize = () => {
+      if (window.innerWidth < theme.breakpoints.values.md) {
+        setDrawerOpen(false);
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [isMobile, theme.breakpoints.values.md]);
+
   // Handle profile menu open
   const handleMenu = (event) => {
     setAnchorEl(event.currentTarget);
@@ -139,7 +160,12 @@ const PermanentNavigationRepresentative = () => {
     return location.pathname === path;
   };
   
-  const drawerWidth = 280;
+  const drawerWidth = 280; // Only using full drawer width in this component
+  
+  // Toggle drawer open/close
+  const toggleDrawer = () => {
+    setDrawerOpen(!drawerOpen);
+  };
   
   return (
     <Box sx={{ display: 'flex' }}>
@@ -149,10 +175,34 @@ const PermanentNavigationRepresentative = () => {
           zIndex: (theme) => theme.zIndex.drawer + 1,
           width: '100%',
           left: 0,
-          backgroundColor: '#0A3D0A'
+          background: ESG_COLORS.navbar.background.white,
+          borderBottom: `1px solid ${ESG_COLORS.navbar.border}`,
+          boxShadow: '0 2px 10px rgba(0, 0, 0, 0.05)',
+          transition: 'all 0.3s ease',
+          color: ESG_COLORS.navbar.text.primary
         }}
       >
         <Toolbar sx={{ px: 0, width: '100%', display: 'flex', position: 'relative', height: 64 }}>
+          {/* Left corner - Hamburger menu */}
+          <Tooltip title={drawerOpen ? "Close menu" : "Open menu"}>
+            <IconButton
+              color="inherit"
+              edge="start"
+              onClick={toggleDrawer}
+              sx={{ 
+                ml: 0, 
+                position: 'absolute', 
+                left: 16,
+                transition: 'all 0.3s ease',
+                '&:hover': {
+                  color: ESG_COLORS.navbar.text.hover
+                }
+              }}
+            >
+              <MenuIcon />
+            </IconButton>
+          </Tooltip>
+          
           {/* Center - Logo and text */}
           <Box sx={{ 
             display: 'flex', 
@@ -164,7 +214,7 @@ const PermanentNavigationRepresentative = () => {
           }}>
             <Box 
               component="img"
-              src={`${process.env.PUBLIC_URL}/images/ESG Aadhar logo dark.svg`}
+              src="/images/ESG Aadhar logo.svg"
               alt="ESGAadhar Logo"
               sx={{ 
                 height: 48,
@@ -172,6 +222,11 @@ const PermanentNavigationRepresentative = () => {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
+                filter: 'drop-shadow(0 2px 5px rgba(0,0,0,0.1))', // Lighter shadow for better visibility on light background
+                transition: 'all 0.3s ease',
+                '&:hover': {
+                  transform: 'scale(1.05)'
+                }
               }}
             />
             {/* Text element removed as requested */}
@@ -191,108 +246,131 @@ const PermanentNavigationRepresentative = () => {
                 <NotificationsIcon />
               </Badge>
             </IconButton>
-            <Menu
+            <Popover
               id="notification-menu"
               anchorEl={notificationAnchorEl}
               open={notificationMenuOpen}
               onClose={handleNotificationMenuClose}
-              MenuListProps={{
-                'aria-labelledby': 'notification-button',
+              anchorOrigin={{
+                vertical: 'bottom',
+                horizontal: 'right',
+              }}
+              transformOrigin={{
+                vertical: 'top',
+                horizontal: 'right',
               }}
               PaperProps={{
+                elevation: 8,
                 sx: {
-                  maxHeight: 'none',
-                  width: '450px',
-                  overflow: 'visible',
-                  mt: 1,
-                  '& .MuiMenuItem-root': {
-                    px: 3,
-                    py: 2,
-                    borderBottom: '1px solid #f0f0f0',
-                    whiteSpace: 'normal',
-                    lineHeight: 1.5
-                  }
+                  width: '350px',
+                  overflow: 'hidden',
+                  mt: 1
                 }
               }}
             >
-              {/* Header with Mark All as Read button */}
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', p: 2, borderBottom: '1px solid #e0e0e0' }}>
-                <Typography variant="subtitle1" sx={{ fontWeight: 'bold', color: '#0A3D0A' }}>
-                  Notifications
-                </Typography>
-                {notifications.filter(n => !n.read).length > 0 && (
-                  <Typography 
-                    variant="body2" 
-                    onClick={handleMarkAllAsRead}
-                    sx={{ 
-                      color: '#0A3D0A', 
-                      cursor: 'pointer',
-                      '&:hover': { textDecoration: 'underline' }
-                    }}
-                  >
-                    Mark all as read
+              <Box sx={{ p: 2 }}>
+                <div className="MuiBox-root" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <Typography variant="h6" sx={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    fontWeight: 'bold',
+                    color: '#0A3D0A'
+                  }}>
+                    <NotificationsIcon fontSize="small" sx={{ mr: 1 }} />
+                    Notifications
                   </Typography>
-                )}
-              </Box>
-              
-              {notifications.length === 0 ? (
-                <MenuItem disabled>
-                  <Typography variant="body2">No notifications</Typography>
-                </MenuItem>
-              ) : (
-                notifications.map(notification => (
-                  <MenuItem 
-                    key={notification.id} 
-                    onClick={() => handleNotificationItemClick(notification)}
-                    sx={{
-                      backgroundColor: notification.read ? 'transparent' : '#f0f7f0',
-                      borderLeft: notification.read ? 'none' : '4px solid #9DC183',
-                      '&:hover': {
-                        backgroundColor: notification.read ? '#f5f5f5' : '#e0f0e0'
-                      },
-                      position: 'relative'
-                    }}
-                  >
-                    <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%', wordBreak: 'break-word', pr: 4 }}>
-                      <Typography 
-                        variant="body2" 
-                        sx={{ 
-                          fontWeight: notification.read ? 'normal' : 'bold',
-                          color: '#0A3D0A'
-                        }}
-                      >
-                        {notification.title}
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary" sx={{ mt: 1, mb: 1, lineHeight: 1.4 }}>
-                        {notification.message}
-                      </Typography>
-                      <Typography 
-                        variant="caption" 
-                        color="text.secondary" 
-                        sx={{ alignSelf: 'flex-end', mt: 0.5 }}
-                      >
-                        {new Date(notification.createdAt).toLocaleString()}
-                      </Typography>
-                    </Box>
-                    
-                    {/* X button to delete notification */}
-                    <IconButton 
+                  
+                  {notifications.length > 0 && (
+                    <Button 
                       size="small" 
-                      onClick={(e) => handleDeleteNotification(notification.id, e)}
+                      variant="outlined" 
+                      color="primary" 
+                      onClick={() => {
+                        // Call API to clear all notifications
+                        Promise.all(notifications.map(n => deleteNotification(n.id)))
+                          .then(() => {
+                            setNotifications([]);
+                            handleNotificationMenuClose();
+                          })
+                          .catch(error => console.error('Error clearing notifications:', error));
+                      }}
                       sx={{ 
-                        position: 'absolute',
-                        right: 8,
-                        top: 8,
-                        color: 'rgba(0, 0, 0, 0.54)',
-                        '&:hover': { color: '#0A3D0A' }
+                        fontSize: '0.75rem', 
+                        py: 0.5, 
+                        borderColor: '#0A3D0A',
+                        color: '#0A3D0A',
+                        '&:hover': {
+                          backgroundColor: 'rgba(10, 61, 10, 0.04)',
+                          borderColor: '#0A3D0A'
+                        }
                       }}
                     >
-                      <Box component="span" sx={{ fontSize: '16px', fontWeight: 'bold' }}>×</Box>
-                    </IconButton>
-                  </MenuItem>
-                ))
-              )}
-            </Menu>
+                      Clear All
+                    </Button>
+                  )}
+                </div>
+              </Box>
+              
+              <Divider />
+              
+              <Box sx={{ p: 2, maxHeight: '300px', overflowY: 'auto' }}>
+                {notifications.length === 0 ? (
+                  <Typography variant="body1" sx={{ textAlign: 'center', py: 2, color: 'text.secondary' }}>
+                    No notifications
+                  </Typography>
+                ) : (
+                  <List sx={{ p: 0 }}>
+                    {notifications.map(notification => (
+                      <ListItem 
+                        key={notification.id}
+                        onClick={() => handleNotificationItemClick(notification)}
+                        sx={{
+                          p: 1.5,
+                          borderBottom: '1px solid #f0f0f0',
+                          backgroundColor: notification.read ? 'transparent' : '#f0f7f0',
+                          '&:hover': {
+                            backgroundColor: notification.read ? '#f5f5f5' : '#e0f0e0'
+                          },
+                          cursor: 'pointer',
+                          position: 'relative'
+                        }}
+                      >
+                        <ListItemText
+                          primary={
+                            <Typography variant="body2" sx={{ fontWeight: notification.read ? 'normal' : 'bold', pr: 4 }}>
+                              {notification.title}
+                            </Typography>
+                          }
+                          secondary={
+                            <>
+                              <Typography variant="caption" display="block" sx={{ mt: 0.5 }}>
+                                {notification.message}
+                              </Typography>
+                              <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block', textAlign: 'right' }}>
+                                {new Date(notification.createdAt).toLocaleString()}
+                              </Typography>
+                            </>
+                          }
+                        />
+                        <IconButton
+                          size="small"
+                          onClick={(e) => handleDeleteNotification(notification.id, e)}
+                          sx={{
+                            position: 'absolute',
+                            right: 8,
+                            top: 8,
+                            color: 'rgba(0, 0, 0, 0.54)',
+                            '&:hover': { color: '#0A3D0A' }
+                          }}
+                        >
+                          <Box component="span" sx={{ fontSize: '16px', fontWeight: 'bold' }}>×</Box>
+                        </IconButton>
+                      </ListItem>
+                    ))}
+                  </List>
+                )}
+              </Box>
+            </Popover>
             <IconButton
               color="inherit"
               onClick={handleMenu}
@@ -327,23 +405,57 @@ const PermanentNavigationRepresentative = () => {
         </Toolbar>
       </AppBar>
       
-      {/* Permanent Drawer */}
+      {/* Fully Collapsible Drawer */}
       <Drawer
-        variant="permanent"
+        variant={isMobile ? "temporary" : "persistent"}
+        open={drawerOpen}
+        onClose={() => setDrawerOpen(false)}
         sx={{
-          width: drawerWidth,
+          width: drawerOpen ? drawerWidth : 0,
           flexShrink: 0,
           '& .MuiDrawer-paper': {
             width: drawerWidth,
             boxSizing: 'border-box',
             whiteSpace: 'nowrap',
-            borderRight: (theme) => `1px solid ${theme.palette.divider}`,
+            borderRight: `1px solid ${ESG_COLORS.navbar.border}`,
             marginTop: '64px', // Height of AppBar
             height: 'calc(100% - 64px)',
-            backgroundColor: '#f5f5f5',
+            background: ESG_COLORS.navbar.dropdown.background,
+            boxShadow: drawerOpen ? '4px 0 10px rgba(0,0,0,0.05)' : 'none',
+            transition: theme.transitions.create(['width', 'margin', 'box-shadow'], {
+              easing: theme.transitions.easing.sharp,
+              duration: theme.transitions.duration.enteringScreen,
+            }),
+            overflowX: 'hidden',
           },
         }}
       >
+        <Box sx={{ 
+          p: 2, 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'center',
+          mb: 1 
+        }}>
+          <Box sx={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'space-between', 
+            width: '100%',
+            animation: `${slideIn} 0.5s ease-out`
+          }}>
+            <Box sx={{ 
+              fontSize: '0.75rem', 
+              fontWeight: 'bold', 
+              color: ESG_COLORS.navbar.text.primary,
+              textTransform: 'uppercase',
+              letterSpacing: '0.5px'
+            }}>
+              Representative Menu
+            </Box>
+          </Box>
+        </Box>
+        <Divider />
         <List>
           {/* Main Dashboard */}
           <ListItemButton 
@@ -352,10 +464,20 @@ const PermanentNavigationRepresentative = () => {
             sx={{
               minHeight: 48,
               px: 2.5,
+              my: 0.5,
+              borderRadius: '4px',
+              mx: 1,
+              transition: 'all 0.2s ease',
+              animation: `${slideIn} 0.3s ease-out`,
+              '&:hover': {
+                backgroundColor: ESG_COLORS.navbar.dropdown.hoverItem,
+                transform: 'translateX(4px)'
+              },
               '&.Mui-selected': {
-                backgroundColor: '#e8f5e9',
+                backgroundColor: 'rgba(76, 175, 80, 0.15)',
+                borderLeft: `4px solid ${ESG_COLORS.navbar.text.active}`,
                 '&:hover': {
-                  backgroundColor: '#c8e6c9',
+                  backgroundColor: 'rgba(76, 175, 80, 0.25)',
                 },
               },
             }}
@@ -392,10 +514,20 @@ const PermanentNavigationRepresentative = () => {
             sx={{
               minHeight: 48,
               px: 2.5,
+              my: 0.5,
+              borderRadius: '4px',
+              mx: 1,
+              transition: 'all 0.2s ease',
+              animation: `${slideIn} 0.3s ease-out`,
+              '&:hover': {
+                backgroundColor: ESG_COLORS.navbar.dropdown.hoverItem,
+                transform: 'translateX(4px)'
+              },
               '&.Mui-selected': {
-                backgroundColor: '#e8f5e9',
+                backgroundColor: 'rgba(76, 175, 80, 0.15)',
+                borderLeft: `4px solid ${ESG_COLORS.navbar.text.active}`,
                 '&:hover': {
-                  backgroundColor: '#c8e6c9',
+                  backgroundColor: 'rgba(76, 175, 80, 0.25)',
                 },
               },
             }}
@@ -430,10 +562,20 @@ const PermanentNavigationRepresentative = () => {
             sx={{
               minHeight: 48,
               px: 2.5,
+              my: 0.5,
+              borderRadius: '4px',
+              mx: 1,
+              transition: 'all 0.2s ease',
+              animation: `${slideIn} 0.3s ease-out`,
+              '&:hover': {
+                backgroundColor: ESG_COLORS.navbar.dropdown.hoverItem,
+                transform: 'translateX(4px)'
+              },
               '&.Mui-selected': {
-                backgroundColor: '#e8f5e9',
+                backgroundColor: 'rgba(76, 175, 80, 0.15)',
+                borderLeft: `4px solid ${ESG_COLORS.navbar.text.active}`,
                 '&:hover': {
-                  backgroundColor: '#c8e6c9',
+                  backgroundColor: 'rgba(76, 175, 80, 0.25)',
                 },
               },
             }}
@@ -462,6 +604,26 @@ const PermanentNavigationRepresentative = () => {
           </ListItemButton>
         </List>
       </Drawer>
+
+      {/* Main content */}
+      <Box component="main" sx={{ 
+        flexGrow: 1, 
+        p: 0, 
+        mt: '64px',
+        transition: theme.transitions.create(['margin', 'width', 'margin-left'], {
+          easing: theme.transitions.easing.sharp,
+          duration: theme.transitions.duration.enteringScreen,
+        }),
+        width: isMobile ? '100%' : (drawerOpen ? `calc(100% - ${drawerWidth}px)` : '100%'),
+        marginLeft: isMobile ? 0 : (drawerOpen ? `${drawerWidth}px` : 0),
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'flex-start'
+      }}>
+        {/* Children content will be rendered here */}
+        {children}
+      </Box>
     </Box>
   );
 };
