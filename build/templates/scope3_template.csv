@@ -1,0 +1,6 @@
+Start Date,End Date,Category,Activity,Source,Quantity,Unit,Emission Factor,Emission Factor Unit,Calculation Method,Notes
+2025-01-01,2025-01-31,Purchased Goods and Services,Raw Materials,Steel,10000,kg,1.8,kg CO2e/kg,Spend-based Method,Sample data
+2025-01-01,2025-01-31,Capital Goods,Equipment Purchase,Manufacturing Equipment,1,unit,5000,kg CO2e/unit,Spend-based Method,Sample data
+2025-01-01,2025-01-31,Fuel and Energy Related Activities,Transmission Losses,Electricity Distribution,500,kWh,0.05,kg CO2e/kWh,Standard Calculation,Sample data
+2025-01-01,2025-01-31,Transportation and Distribution,Inbound Logistics,Truck Transport,2000,ton-km,0.1,kg CO2e/ton-km,Distance-based Method,Sample data
+2025-01-01,2025-01-31,Waste Generated,Office Waste,General Waste,500,kg,0.5,kg CO2e/kg,Waste-type-specific Method,Sample data

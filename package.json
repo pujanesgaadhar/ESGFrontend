@@ -21,11 +21,14 @@
     "react-router-dom": "^6.8.2",
     "react-scripts": "5.0.1",
     "recharts": "^2.15.3",
-    "xlsx": "^0.18.5"
+    "xlsx": "^0.18.5",
+    "@craco/craco": "^7.1.0"
   },
   "scripts": {
     "start": "react-scripts start",
-    "build": "react-scripts build",
+    "build": "GENERATE_SOURCEMAP=false react-scripts build",
+    "build:fast": "GENERATE_SOURCEMAP=false INLINE_RUNTIME_CHUNK=false CI=false craco build",
+    "build:analyze": "ANALYZE=true craco build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
@@ -46,5 +49,10 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "compression-webpack-plugin": "^10.0.0",
+    "terser-webpack-plugin": "^5.3.9",
+    "webpack-bundle-analyzer": "^4.9.1"
   }
 }

@@ -1,0 +1,5 @@
+Start Date,End Date,Category,Activity,Source,Quantity,Unit,Emission Factor,Emission Factor Unit,Calculation Method,Notes
+2025-01-01,2025-01-31,Stationary Combustion,Boiler Operation,Natural Gas,1000,kWh,0.2,kg CO2e/kWh,Standard Calculation,Sample data
+2025-01-01,2025-01-31,Mobile Combustion,Company Vehicles,Diesel,500,liters,2.68,kg CO2e/liter,Standard Calculation,Sample data
+2025-01-01,2025-01-31,Process Emissions,Manufacturing,Process XYZ,750,kg,1.5,kg CO2e/kg,Standard Calculation,Sample data
+2025-01-01,2025-01-31,Fugitive Emissions,Refrigerant Leakage,R-410A,25,kg,2088,kg CO2e/kg,Standard Calculation,Sample data

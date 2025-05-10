@@ -1,26 +1,42 @@
-# Build stage
-FROM node:18-alpine as build
+# Dependencies stage
+FROM node:18-alpine AS deps
+WORKDIR /app
 
-# Set working directory
+# Install build dependencies
+RUN apk add --no-cache python3 make g++
+
+# Copy package files
+COPY package*.json ./
+
+# Install dependencies with optimizations
+RUN npm ci --no-audit --no-fund --prefer-offline --production=false
+
+# Build stage
+FROM node:18-alpine AS build
 WORKDIR /app
 
 # Define build argument for environment
 ARG ENV=development
 
-# Copy package files
+# Copy dependencies from deps stage
+COPY --from=deps /app/node_modules ./node_modules
 COPY package*.json ./
 
-# Install dependencies
-RUN npm install
+# Copy only necessary project files
+COPY public ./public
+COPY src ./src
+COPY .env.${ENV} ./.env
+COPY webpack.config.js ./webpack.config.js
 
-# Copy project files
-COPY . .
+# Add build optimization environment variables
+ENV NODE_OPTIONS="--max-old-space-size=2048"
+ENV GENERATE_SOURCEMAP=false
+ENV BABEL_ENV=production
+ENV INLINE_RUNTIME_CHUNK=false
+ENV CI=false
 
-# Copy the appropriate environment variables file
-RUN cp .env.${ENV} .env
-
-# Build the app
-RUN npm run build
+# Build the app with optimized settings
+RUN npm run build:fast
 
 # Production stage
 FROM nginx:alpine

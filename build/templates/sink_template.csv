@@ -1,0 +1,5 @@
+Start Date,End Date,Category,Activity,Source,Quantity,Unit,Emission Factor,Emission Factor Unit,Calculation Method,Notes
+2025-01-01,2025-01-31,Reforestation,Tree Planting,Oak Trees,500,trees,-0.025,tons CO2e/tree/year,Standard Calculation,Sample data
+2025-01-01,2025-01-31,Afforestation,Land Conversion,Mixed Forest,10,hectares,-7,tons CO2e/hectare/year,Standard Calculation,Sample data
+2025-01-01,2025-01-31,Soil Carbon Sequestration,No-till Farming,Agricultural Land,50,hectares,-0.5,tons CO2e/hectare/year,Standard Calculation,Sample data
+2025-01-01,2025-01-31,Reforestation,Tree Planting,Pine Trees,300,trees,-0.02,tons CO2e/tree/year,Standard Calculation,Sample data
