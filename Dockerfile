@@ -9,7 +9,7 @@ RUN apk add --no-cache python3 make g++
 COPY package*.json ./
 
 # Install dependencies with optimizations
-RUN npm ci --no-audit --no-fund --prefer-offline --production=false
+RUN npm install --no-audit --no-fund --prefer-offline --production=false
 
 # Build stage
 FROM node:18-alpine AS build
@@ -27,6 +27,7 @@ COPY public ./public
 COPY src ./src
 COPY .env.${ENV} ./.env
 COPY webpack.config.js ./webpack.config.js
+COPY craco.config.js ./craco.config.js
 
 # Add build optimization environment variables
 ENV NODE_OPTIONS="--max-old-space-size=2048"
