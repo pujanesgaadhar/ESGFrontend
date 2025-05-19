@@ -9,7 +9,7 @@ import {
   Alert,
 } from '@mui/material';
 
-const AddCompanyDialog = ({ open, onClose, onSubmit }) => {
+const AddCompanyDialog = ({ open, onClose, onAddCompany }) => {
   const [formData, setFormData] = useState({
     name: '',
     status: 'active',
@@ -35,7 +35,7 @@ const AddCompanyDialog = ({ open, onClose, onSubmit }) => {
 
     try {
       console.log('Submitting company data to parent component...');
-      await onSubmit(formData);
+      await onAddCompany(formData);
       console.log('Company submitted successfully');
       
       // Only reset form if submission was successful

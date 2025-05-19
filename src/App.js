@@ -12,6 +12,7 @@ import EnhancedManagerDashboard from './pages/EnhancedManagerDashboard';
 import RepresentativeDashboard from './pages/RepresentativeDashboard';
 
 import Navigation from './components/Navigation.jsx';
+import AdminNavigation from './components/AdminNavigation';
 import PermanentNavigation from './components/PermanentNavigation';
 import PermanentNavigationRepresentative from './components/PermanentNavigationRepresentative';
 import EmissionsChartDashboardWithZoom from './components/EmissionsChartDashboardWithZoom';
@@ -32,7 +33,7 @@ function App() {
             element={
               <ProtectedRoute roles={['admin', 'ADMIN']}>
                 <>
-                  <Navigation />
+                  <AdminNavigation />
                   <Box component="main" sx={{ flexGrow: 1, p: 3, width: '100%' }}>
                     <AdminDashboard />
                   </Box>

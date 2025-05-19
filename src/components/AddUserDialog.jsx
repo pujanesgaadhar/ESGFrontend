@@ -12,7 +12,7 @@ import {
   Select,
 } from '@mui/material';
 
-const AddUserDialog = ({ open, onClose, companies, onSubmit }) => {
+const AddUserDialog = ({ open, onClose, companies = [], onAddUser }) => {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -45,7 +45,7 @@ const AddUserDialog = ({ open, onClose, companies, onSubmit }) => {
     const userData = { ...formData };
     
     // Submit the data
-    onSubmit(userData).then(() => {
+    onAddUser(userData).then(() => {
       // Only reset form after successful submission
       setFormData({
         name: '',
